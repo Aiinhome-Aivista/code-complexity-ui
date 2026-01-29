@@ -1,0 +1,77 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@200..1000&display=swap");
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Nunito";
+}
+
+@layer base {
+  :root {
+    --background: #f3f4f6; /* light gray */
+    --foreground: #0a0a0a;
+
+    /* Table / Card Theme Variables - Light */
+    --card-bg: #ffffff; /* white cards on gray bg */
+    --card-border: #e5e7eb; /* gray-200 */
+    --table-header-bg: #f9fafb !important; /* gray-50 */
+    --table-border: #e5e7eb !important;
+    --row-hover: #f9fafb !important;
+    --row-alt: #ffffff !important;
+    --text-primary: #111827; /* gray-900 */
+    --text-secondary: #6b7280; /* gray-500 */
+    --primary-main: #4338ca; /* indigo-700 */
+    --danger-main: #ef4444; /* red-500 */
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #262626 transparent; /* neutral-800 transparent */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #262626; /* neutral-800 */
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #404040; /* neutral-700 */
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.css-1toxriw-MuiList-root-MuiMenu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background-color: #e5e7eb !important;
+}
