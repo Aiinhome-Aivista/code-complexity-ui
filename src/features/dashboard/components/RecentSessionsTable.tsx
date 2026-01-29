@@ -458,7 +458,7 @@ export function RecentSessionsTable({
                             "&:hover": { color: "var(--primary-main)" },
                           }}
                         >
-                          <Visibility fontSize="small" />
+                          <Visibility fontSize="medium" />
                         </IconButton>
                         <IconButton
                           size="small"
@@ -467,7 +467,7 @@ export function RecentSessionsTable({
                             "&:hover": { color: "var(--danger-main)" },
                           }}
                         >
-                          <Delete fontSize="small" />
+                          <Delete fontSize="medium" />
                         </IconButton>
                       </Box>
                     </TableCell>
