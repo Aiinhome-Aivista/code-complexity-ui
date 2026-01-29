@@ -9,5 +9,6 @@ export const API_ENDPOINTS = {
     LOGIN: `${BASE_URL}api/auth/login`,
     REGISTER: `${BASE_URL}api/auth/register`,
     UPLOAD: `${BASE_URL}api/visualization/upload`,
+    HEATMAP: `${BASE_URL}api/code_heatmap`,
   },
 } as const;

@@ -42,8 +42,9 @@ export function UserMenu() {
     localStorage.removeItem("token");
     localStorage.clear();
     // Clear cookie if it exists (for middleware compatibility)
-    document.cookie = "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-    
+    document.cookie =
+      "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+
     // AuthProvider syncs this change to local storage and redirects
     logout();
     closeUserMenu();
@@ -57,7 +58,7 @@ export function UserMenu() {
     <div
       ref={menuRef}
       onMouseLeave={closeUserMenu}
-      className="fixed top-3 right-16 w-60 rounded-xl bg-gray-200/80 backdrop-blur-md border border-gray-700 shadow-lg shadow-neutral-200/50 overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200"
+      className="fixed top-3 right-16 w-60 rounded-xl bg-gray-200/80 backdrop-blur-md border border-gray-400 shadow-lg shadow-neutral-200/50 overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200"
     >
       <div className="p-1">
         {/* User Profile Section */}

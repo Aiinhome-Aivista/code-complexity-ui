@@ -24,4 +24,10 @@ export const commonService = {
       method: "GET",
     });
   },
+  getHeatmapData: async (payload: any): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.POST.HEATMAP, {
+      method: "POST",
+      data: payload,
+    });
+  },
 };

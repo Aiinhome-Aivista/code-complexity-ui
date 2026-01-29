@@ -6,12 +6,20 @@ import { RecentSessionsTable } from "@/features/dashboard/components/RecentSessi
 import { UploadModal } from "@/components/upload/UploadModal";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { useUIStore } from "@/store/uiStore";
 
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { setProjectResults, setHeatmapData } = useUIStore();
+
+  useEffect(() => {
+    // Clear previous analysis data when entering dashboard
+    setProjectResults(null);
+    setHeatmapData(null);
+  }, [setProjectResults, setHeatmapData]);
 
   useEffect(() => {
     setIsUploadModalOpen(searchParams.get("analysis") === "agentic");

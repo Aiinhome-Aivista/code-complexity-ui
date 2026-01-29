@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { MetricType, HeatmapData, heatmapData } from "@/data/mockData";
-import {
-  ReportProblem as AlertOctagon,
-  ArrowForward as ArrowRight,
-} from "@mui/icons-material";
+import { useState, useEffect } from "react";
+
+type MetricType = "Complexity" | "Security" | "Reliability" | "Performance" | "Size";
+
+interface HeatmapData {
+  file: string;
+  lines: number;
+  complexity: number;
+  security: number;
+  performance: number;
+  size: number;
+  reason?: string;
+  riskLevel?: string;
+}
+
 
 interface HeatmapViewProps {
   data: HeatmapData[];
@@ -27,10 +27,8 @@ function HeatmapView({
   selectedMetric,
   onMetricChange,
 }: HeatmapViewProps) {
-  const [hoveredCell, setHoveredCell] = useState<{
-    file: string;
-    value: number;
-  } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<HeatmapData | null>(null);
+  const [selectedRiskFilter, setSelectedRiskFilter] = useState<string | null>(null);
 
   const metrics: MetricType[] = [
     "Complexity",
@@ -54,217 +52,182 @@ function HeatmapView({
     }
   };
 
-  const getColorForValue = (value: number): string => {
-    if (value >= 80) return "bg-red-600";
-    if (value >= 60) return "bg-red-500";
-    if (value >= 40) return "bg-yellow-500";
-    if (value >= 20) return "bg-yellow-400";
-    return "bg-green-500";
+  const getRiskColor = (value: number) => {
+    if (value >= 80) return "bg-red-600 dark:bg-red-600";
+    if (value >= 60) return "bg-red-500 dark:bg-red-500";
+    if (value >= 40) return "bg-orange-500 dark:bg-orange-500";
+    if (value >= 20) return "bg-yellow-500 dark:bg-yellow-500";
+    return "bg-emerald-500 dark:bg-emerald-500";
   };
 
-  const getRiskColor = (level: number) => {
-    // Level 0-10
-    if (level === 0)
-      return "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400";
-    if (level < 3)
-      return "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400";
-    if (level < 6)
-      return "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400";
-    if (level < 8)
-      return "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400";
-    return "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400";
-  };
-
-  const getSeverityLabel = (value: number): string => {
-    if (value >= 80) return "Critical";
-    if (value >= 60) return "High";
-    if (value >= 40) return "Moderate";
-    if (value >= 20) return "Low";
-    return "Safe";
-  };
-
-  // Mock data for topRisks
-  const topRisks = [
-    {
-      file: "src/components/ComplexComponent.tsx",
-      risk: 9,
-      details: { churn: "High", complexity: "Very High", coverage: 65 },
-    },
-    {
-      file: "src/utils/LegacyHelper.js",
-      risk: 8,
-      details: { churn: "Medium", complexity: "High", coverage: 70 },
-    },
-    {
-      file: "src/api/AuthService.ts",
-      risk: 7,
-      details: { churn: "High", complexity: "Medium", coverage: 80 },
-    },
-    {
-      file: "src/pages/Dashboard.jsx",
-      risk: 6,
-      details: { churn: "Low", complexity: "Medium", coverage: 90 },
-    },
+  const legendItems = [
+    { label: "Safe (0-19)", value: "safe", color: "bg-emerald-500" },
+    { label: "Low (20-39)", value: "low", color: "bg-yellow-500" },
+    { label: "Moderate (40-59)", value: "moderate", color: "bg-orange-500" },
+    { label: "High (60-79)", value: "high", color: "bg-red-500" },
+    { label: "Critical (80-100)", value: "critical", color: "bg-red-600" },
   ];
 
-  const maxLines = Math.max(...data.map((d) => d.lines));
+  const filteredData = selectedRiskFilter
+    ? data.filter((item) => item.riskLevel === selectedRiskFilter)
+    : data;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6 space-y-6 min-h-screen bg-gray-50 dark:bg-neutral-950">
+      {/* Header Section */}
+      <div className="space-y-4">
         <div>
-          <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
-            Risk Heatmap
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+            Code Risk Heatmap
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Visualize code cleanup priorities based on complexity and churn
+            Visual representation of risk distribution across files
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="border-gray-600 text-neutral-700 hover:bg-neutral-100 bg-neutral-100 "
-          >
-            Export
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-            Refresh Analysis
-          </Button>
+
+        {/* Metric Selection Tabs */}
+        {/* <div className="flex items-center gap-3">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            Metric:
+          </span>
+          <div className="flex gap-2">
+            {metrics.map((metric) => (
+              <button
+                key={metric}
+                onClick={() => onMetricChange(metric)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
+                  selectedMetric === metric
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700"
+                }`}
+              >
+                {metric}
+              </button>
+            ))}
+          </div>
+        </div> */}
+      </div>
+
+      {/* Legend Card */}
+      <div className="bg-gray-200 dark:bg-neutral-900 rounded-xl p-5 border border-neutral-300 dark:border-neutral-800 shadow-sm">
+        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3 flex justify-between items-center">
+          Risk Level Legend
+          {selectedRiskFilter && (
+            <button 
+              onClick={() => setSelectedRiskFilter(null)}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline cursor-pointer"
+            >
+              Clear Filter
+            </button>
+          )}
+        </h3>
+        <div className="flex flex-wrap gap-4">
+          {legendItems.map((item) => {
+            const isSelected = selectedRiskFilter === item.value;
+            const isDimmed = selectedRiskFilter && !isSelected;
+            
+            return (
+              <button
+                key={item.label}
+                onClick={() => setSelectedRiskFilter(isSelected ? null : item.value)}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer ${
+                  isSelected 
+                    ? "bg-white dark:bg-neutral-800 shadow-sm ring-1 ring-neutral-300 dark:ring-neutral-700" 
+                    : "hover:bg-gray-300/50 dark:hover:bg-neutral-800/50"
+                } ${isDimmed ? "opacity-40 grayscale" : "opacity-100"}`}
+              >
+                <div className={`w-5 h-5 rounded ${item.color} shadow-sm`} />
+                <span className={`text-sm font-medium ${isSelected ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-600 dark:text-neutral-400"}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Heatmap Visualization */}
-        <Card className="lg:col-span-2 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-neutral-900 dark:text-neutral-100">
-                  Project Risk Distribution
-                </CardTitle>
-                <CardDescription className="text-neutral-500 dark:text-neutral-400">
-                  Size represents complexity, color represents churn rate
-                </CardDescription>
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                  Risk Levels
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-red-500 dark:bg-red-500/80"></div>
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      Critical
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-orange-500 dark:bg-orange-500/80"></div>
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      High
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-yellow-500 dark:bg-yellow-500/80"></div>
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      Moderate
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-green-500 dark:bg-green-500/80"></div>
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      Low
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-[4/3] w-full bg-neutral-100 dark:bg-neutral-950 rounded-lg p-4 grid grid-cols-4 grid-rows-4 gap-1">
-              {/* Mock TreeMap Visualization */}
-              {[...Array(16)].map((_, i) => {
-                const riskLevel = Math.floor(Math.random() * 10);
-                const size = Math.floor(Math.random() * 3) + 1;
-                return (
-                  <div
-                    key={i}
-                    className={`rounded transition-opacity hover:opacity-80 cursor-pointer ${
-                      i % 5 === 0 ? "col-span-2 row-span-2" : ""
-                    } ${getRiskColor(riskLevel)}`}
-                    title={`File ${i + 1} - Risk Level ${riskLevel}`}
-                  ></div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+      {/* File List / Heatmap Bars */}
+      <div className="bg-gray-200 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-300 dark:border-neutral-800 shadow-sm space-y-2">
+        {Array.isArray(filteredData) && filteredData.length > 0 ? (
+          filteredData.map((file, index) => {
+            const value = getMetricValue(file, selectedMetric);
+            const colorClass = getRiskColor(value);
+            const isSelected = selectedFile?.file === file.file;
 
-        {/* Top Risk Files */}
-        <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-              <AlertOctagon className="w-5 h-5 text-red-500" />
-              Top Priorities
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {topRisks.map((file, i) => (
-              <div
-                key={i}
-                className="group flex items-start gap-3 p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-200 dark:hover:border-neutral-800"
-              >
-                <div className="mt-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      file.risk >= 8
-                        ? "bg-red-500"
-                        : file.risk >= 6
-                          ? "bg-orange-500"
-                          : "bg-yellow-500"
-                    }`}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            return (
+              <div key={index} className="space-y-2">
+                <div
+                  onClick={() => setSelectedFile(selectedFile?.file === file.file ? null : file)}
+                  className={`space-y-1.5 p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
+                    isSelected
+                      ? "bg-white dark:bg-neutral-800 border-blue-500 ring-1 ring-blue-500"
+                      : "hover:bg-gray-300/50 dark:hover:bg-neutral-800 border-transparent"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-mono text-neutral-700 dark:text-neutral-300 font-medium">
                       {file.file}
-                    </h4>
-                    <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">
-                      {file.details.churn} churn
+                    </span>
+                    <span className="text-neutral-500 dark:text-neutral-500">
+                      {file.lines} lines
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900"
+
+                  <div className="h-8 w-full bg-neutral-300 dark:bg-neutral-800 rounded-md overflow-hidden relative">
+                    <div
+                      className={`h-full ${colorClass} transition-all duration-500 ease-out flex items-center px-3`}
+                      style={{ width: `${value}%` }}
                     >
-                      {file.details.complexity} complex
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900"
-                    >
-                      {file.details.coverage}% cvg
-                    </Badge>
+                      <span className="text-xs font-bold text-white drop-shadow-sm">
+                        {value}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+
+                {isSelected && (
+                  <div className="bg-gray-100 dark:bg-neutral-800/50 rounded-lg p-4 border border-neutral-300 dark:border-neutral-700 mx-2 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                          Analysis Details
+                          {file.riskLevel && (
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-full capitalize border ${
+                                file.riskLevel === "safe"
+                                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                  : file.riskLevel === "low"
+                                  ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                  : file.riskLevel === "moderate"
+                                  ? "bg-orange-100 text-orange-800 border-orange-200"
+                                  : "bg-red-100 text-red-800 border-red-200"
+                              }`}
+                            >
+                              {file.riskLevel}
+                            </span>
+                          )}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
+                        Reason
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed bg-white dark:bg-neutral-900 p-3 rounded border border-neutral-200 dark:border-neutral-800">
+                        {file.reason || "No detailed analysis available."}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
-            <Button
-              variant="ghost"
-              className="w-full text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 border border-dashed border-neutral-200 dark:border-neutral-800"
-            >
-              View All Files
-            </Button>
-          </CardContent>
-        </Card>
+            );
+          })
+        ) : (
+          <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
+            No heatmap data available for this metric.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -272,10 +235,57 @@ function HeatmapView({
 
 export default function HeatmapPage() {
   const [metric, setMetric] = useState<MetricType>("Complexity");
+  const [data, setData] = useState<HeatmapData[]>([]);
+
+  useEffect(() => {
+    const storageData = localStorage.getItem("code-heatmap-storage-v1");
+    if (storageData) {
+      try {
+        const parsed = JSON.parse(storageData);
+        if (parsed.state && parsed.state.heatmapData) {
+          const loadedData = parsed.state.heatmapData;
+          console.log("Heatmap data from localStorage:", loadedData);
+          
+          let files: any[] = [];
+          
+          // Handle various response structures
+          if (loadedData.data && Array.isArray(loadedData.data.files)) {
+            files = loadedData.data.files;
+          } else if (loadedData.files && Array.isArray(loadedData.files)) {
+            files = loadedData.files;
+          } else if (Array.isArray(loadedData)) {
+            files = loadedData;
+          }
+
+          if (files.length > 0) {
+            // Transform API data to component format
+            // API returns 'risk' for the requested metric. We map this to all metric fields 
+            // for visualization purposes, as the API return is specific to one metric at a time.
+            const transformedData: HeatmapData[] = files.map((f: any) => ({
+              file: f.filename,
+              lines: f.lines,
+              complexity: f.risk,
+              security: f.risk,
+              performance: f.risk,
+              size: f.risk,
+              reason: f.reason,
+              riskLevel: f.risk_level,
+            }));
+            
+            setData(transformedData);
+          } else {
+             console.warn("Could not find files array in heatmap data:", loadedData);
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing localStorage data:", error);
+      }
+    }
+  }, []);
 
   return (
     <HeatmapView
-      data={heatmapData}
+      data={data}
       selectedMetric={metric}
       onMetricChange={setMetric}
     />

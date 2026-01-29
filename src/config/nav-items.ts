@@ -25,12 +25,12 @@ export const navItems: NavItem[] = [
     href: "/heatmap",
     icon: "Analytics",
   },
-  {
+  /*  {
     title: "Code View",
     href: "/code-view",
     icon: "Code",
-  },
-  {
+  }, */
+  /* {
     title: "API Analysis",
     href: "/api-analysis",
     icon: "Hub",
@@ -44,15 +44,15 @@ export const navItems: NavItem[] = [
     title: "Report",
     href: "/report",
     icon: "Description",
-  },
+  }, */
   {
     title: "Visualization",
     href: "/visualization",
     icon: "ViewQuilt",
   },
-  {
+  /*   {
     title: "Flow",
     href: "/flow",
     icon: "AccountTree",
-  },
+  }, */
 ];

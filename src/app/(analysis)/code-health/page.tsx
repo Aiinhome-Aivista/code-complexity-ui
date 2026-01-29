@@ -197,7 +197,7 @@ export default function CodeHealthAnalysis() {
 
         {selectedMetric === "OVERALL" ? (
           <Card className="bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="px-3 py-4 [&:last-child]:pb-4 space-y-4">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
                   <Zap className="w-6 h-6" />

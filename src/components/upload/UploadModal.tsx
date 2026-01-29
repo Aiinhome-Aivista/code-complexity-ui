@@ -175,6 +175,8 @@ export function UploadModal({
       if (onUploadSuccess) {
         onUploadSuccess();
       }
+      onOpenChange(false);
+      setSelectedItem(null);
     } catch (error) {
       console.error("Upload failed", error);
       setToast({
@@ -185,9 +187,6 @@ export function UploadModal({
     } finally {
       setIsUploading(false);
     }
-
-    onOpenChange(false);
-    setSelectedItem(null);
   };
 
   const handleCloseToast = () => {

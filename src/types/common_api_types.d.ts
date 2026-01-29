@@ -39,6 +39,7 @@ export interface SessionDataTableItem {
   name: string;
   relationship_status: string;
   visualization_status: string;
+  session_id: string;
 }
 
 export interface SessionDataTableResponse {

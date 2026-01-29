@@ -9,6 +9,8 @@ interface UIState {
   openUserMenu: () => void;
   projectResults: any | null;
   setProjectResults: (results: any) => void;
+  heatmapData: any | null;
+  setHeatmapData: (data: any) => void;
   fileTree: any[];
   setFileTree: (tree: any[]) => void;
 }
@@ -22,6 +24,8 @@ export const useUIStore = create<UIState>()(
       openUserMenu: () => set({ isUserMenuOpen: true }),
       projectResults: null,
       setProjectResults: (results) => set({ projectResults: results }),
+      heatmapData: null,
+      setHeatmapData: (data) => set({ heatmapData: data }),
       fileTree: initialFileTree,
       setFileTree: (tree) => set({ fileTree: tree }),
     }),
