@@ -19,6 +19,8 @@ function DashboardContent() {
     // Clear previous analysis data when entering dashboard
     setProjectResults(null);
     setHeatmapData(null);
+    // Explicitly clear storage to ensure no ghost data remains
+    localStorage.removeItem("code-heatmap-storage-v1");
   }, [setProjectResults, setHeatmapData]);
 
   useEffect(() => {

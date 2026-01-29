@@ -216,9 +216,7 @@ export function UploadModal({
           <div
             className={cn(
               "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden",
-              isDragging
-                ? "border-blue-600 bg-blue-100"
-                : "border-gray-500 ",
+              isDragging ? "border-blue-600 bg-blue-100" : "border-gray-500 ",
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -297,7 +295,7 @@ export function UploadModal({
                     }}
                   >
                     <InsertDriveFile className="mr-3 h-5 w-5 text-gray-600" />
-                    <span>Select File</span>
+                    <span>Select File/ZIP</span>
                   </Button>
                   <Button
                     disabled={isDragging}
@@ -339,7 +337,6 @@ export function UploadModal({
           </Button>
         </DialogFooter>
       </DialogContent>
-
 
       <Snackbar
         open={toast.open}
