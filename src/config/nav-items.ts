@@ -21,11 +21,6 @@ export const navItems: NavItem[] = [
     icon: "Dashboard",
   },
   {
-    title: "Visualization",
-    href: "/visualization",
-    icon: "ViewQuilt",
-  },
-  {
     title: "Heatmap",
     href: "/heatmap",
     icon: "Analytics",
@@ -49,6 +44,11 @@ export const navItems: NavItem[] = [
     title: "Report",
     href: "/report",
     icon: "Description",
+  },
+  {
+    title: "Visualization",
+    href: "/visualization",
+    icon: "ViewQuilt",
   },
   {
     title: "Flow",

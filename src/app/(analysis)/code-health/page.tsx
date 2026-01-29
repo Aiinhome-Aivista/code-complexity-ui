@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   ArrowForward,
   Warning as AlertTriangle,
@@ -29,44 +31,76 @@ const mockProjectHealth = {
 };
 
 export default function CodeHealthAnalysis() {
-  const { overallScore, ratings, warnings } = mockProjectHealth;
+  const [results, setResults] = useState<any>(null);
+  const [selectedMetric, setSelectedMetric] = useState<string>("OVERALL");
+
+  // Use results if available, otherwise fallback to mock (or empty if you prefer, but fallback is safer for now)
+  const currentHealth = results?.codeHealth || mockProjectHealth;
+  const overallScore = currentHealth.overallScore;
+  // Map snake_case or whatever keys from JSON to the UI expected keys if needed,
+  // but looking at the JSON, they are mostly compatible except for casing in some places?
+  // Actually, let's just use the keys from currentHealth.ratings directly if possible.
+  // The JSON has: modularity, performance, readability, reliability, security, sizeHealth.
+  // The mock has: readability, modularity, security, reliability, performance, sizeHealth.
+  // They match!
+
+  const ratings = currentHealth.ratings;
+  const insights = results?.insights || [];
+
+  useEffect(() => {
+    const storageData = localStorage.getItem("code-heatmap-storage-v1");
+    if (storageData) {
+      const parsedData = JSON.parse(storageData);
+      if (parsedData && parsedData.state && parsedData.state.projectResults) {
+        setResults(parsedData.state.projectResults);
+        console.log("results:", parsedData.state.projectResults);
+      }
+    }
+  }, []);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-500";
     if (score >= 60) return "text-yellow-500";
-    return "text-red-500";
+    return "text-red-600 dark:text-red-500";
   };
 
-  const getRatingStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+  const handleMetricClick = (metric: string) => {
+    setSelectedMetric(metric);
+  };
+
+  // Helper to get color class based on score
+  const getRatingColorClass = (value: number) => {
+    if (value >= 4.5)
+      return {
+        bg: "bg-emerald-50 dark:bg-emerald-900/30",
+        text: "text-emerald-700 dark:text-emerald-300",
+        border: "border-emerald-200 dark:border-emerald-800",
+        indicator: "bg-emerald-400",
+      };
+    if (value >= 3.5)
+      return {
+        bg: "bg-blue-50 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-300",
+        border: "border-blue-200 dark:border-blue-800",
+        indicator: "bg-blue-400",
+      };
+    if (value >= 2.5)
+      return {
+        bg: "bg-amber-50 dark:bg-amber-900/30",
+        text: "text-amber-700 dark:text-amber-300",
+        border: "border-amber-200 dark:border-amber-800",
+        indicator: "bg-amber-400",
+      };
     return {
-      fullStars,
-      hasHalfStar,
-      emptyStars: 5 - fullStars - (hasHalfStar ? 1 : 0),
+      bg: "bg-red-50 dark:bg-red-900/30",
+      text: "text-red-700 dark:text-red-300",
+      border: "border-red-200 dark:border-red-800",
+      indicator: "bg-red-400",
     };
   };
 
-  const StarRating = ({ rating }: { rating: number }) => {
-    const { fullStars, hasHalfStar, emptyStars } = getRatingStars(rating);
-    return (
-      <div className="flex gap-0.5">
-        {[...Array(fullStars)].map((_, i) => (
-          <div key={`full-${i}`} className="w-3 h-3 bg-yellow-500 rounded-sm" />
-        ))}
-        {hasHalfStar && <div className="w-3 h-3 bg-yellow-500/50 rounded-sm" />}
-        {[...Array(emptyStars)].map((_, i) => (
-          <div
-            key={`empty-${i}`}
-            className="w-3 h-3 bg-neutral-200 dark:bg-neutral-800 rounded-sm"
-          />
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 min-h-screen">
       <div>
         <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
           Code Health Analysis
@@ -76,151 +110,229 @@ export default function CodeHealthAnalysis() {
         </p>
       </div>
 
-      {/* Overall Score */}
-      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-neutral-900 dark:text-neutral-100 text-lg">
-            Overall Score
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
+      {/* Main Score Card */}
+      <Card className="px-0 bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
+        <CardContent className="flex flex-col items-center gap-6 pt-6 px-0">
+          {/* Ratings Chips */}
+          <div className="flex flex-wrap justify-center gap-2 px-4">
+            {Object.entries(ratings || {}).map(([key, data]: [string, any]) => {
+              // Handle both mock structure (value) and real structure (score)
+              const value = typeof data === "number" ? data : data.score;
+              const styles = getRatingColorClass(value);
+              const isSelected = selectedMetric === key;
+
+              const labelMap: Record<string, string> = {
+                readability: "Readability",
+                modularity: "Modularity",
+                security: "Security",
+                reliability: "Reliability",
+                performance: "Performance",
+                sizeHealth: "Size Health",
+              };
+
+              return (
+                <div
+                  key={key}
+                  onClick={() => handleMetricClick(key)}
+                  className={`flex items-center gap-2 mx-1 rounded-full border px-5 py-2 shadow-sm transition-all cursor-pointer 
+                    ${styles.bg} ${styles.text} ${styles.border}
+                    ${isSelected ? "ring-2 ring-offset-1 ring-neutral-400 dark:ring-neutral-600 scale-104" : "hover:scale-104 opacity-90 hover:opacity-100"}
+                  `}
+                >
+                  <span className="text-sm font-semibold">
+                    {labelMap[key] || key}
+                  </span>
+                  <div
+                    className={`h-4 w-px opacity-30 ${styles.indicator.replace("bg-", "bg-current ")}`}
+                  />
+                  <span className="font-mono font-bold text-sm">
+                    {value.toFixed(1)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="relative flex flex-col items-center justify-center py-4">
+            {/* Overall Score Chip */}
             <div
-              className={`text-6xl font-mono ${getScoreColor(overallScore)}`}
+              onClick={() => handleMetricClick("OVERALL")}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full border-2 shadow-sm bg-white dark:bg-black/20 cursor-pointer transition-transform hover:scale-105
+                ${selectedMetric === "OVERALL" ? "ring-1 ring-offset-1 ring-neutral-200" : ""}
+                ${
+                  overallScore >= 80
+                    ? "border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300"
+                    : overallScore >= 60
+                      ? "border-yellow-200 text-yellow-700 dark:border-yellow-800 dark:text-yellow-300"
+                      : "border-red-200 text-red-700 dark:border-red-800 dark:text-red-300"
+                }`}
             >
-              {overallScore}
+              <span className="text-md font-bold uppercase tracking-wide opacity-80">
+                Overall Score
+              </span>
+              <div className="h-5 bg-current opacity-20" />
+              <span className="text-3xl font-mono font-bold tracking-tighter">
+                {overallScore}
+              </span>
             </div>
-            <div className="text-neutral-500 dark:text-neutral-400 text-sm">
-              <div>Out of 100</div>
-              <div className="mt-1">
-                {overallScore >= 80 && "Excellent code quality"}
-                {overallScore >= 60 &&
-                  overallScore < 80 &&
-                  "Good with room for improvement"}
-                {overallScore < 60 && "Needs attention"}
-              </div>
-            </div>
+
+            <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-300 max-w-sm text-center font-medium">
+              {overallScore >= 80 && "Excellent code quality"}
+              {overallScore >= 60 &&
+                overallScore < 80 &&
+                "Good, with room for improvement"}
+              {overallScore < 60 && "Requires attention"}
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Ratings Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[
-          { label: "Readability", value: ratings.readability },
-          { label: "Modularity", value: ratings.modularity },
-          { label: "Security", value: ratings.security },
-          { label: "Reliability", value: ratings.reliability },
-          { label: "Performance", value: ratings.performance },
-          { label: "Size Health", value: ratings.sizeHealth },
-        ].map((item) => (
-          <Card key={item.label} className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-neutral-900 dark:text-neutral-100 text-sm">
-                {item.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <StarRating rating={item.value} />
-                <span className="text-neutral-500 dark:text-neutral-400 font-mono text-sm">
-                  {item.value.toFixed(1)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Warnings */}
-      <div>
-        <h2 className="text-lg text-neutral-900 dark:text-neutral-100 mb-4 font-semibold">
-          Active Warnings
+      {/* Dynamic Detail Section */}
+      <div className="transition-all duration-300 ease-in-out">
+        <h2 className="text-lg text-neutral-900 dark:text-neutral-100 mb-4 font-semibold capitalize">
+          {selectedMetric === "OVERALL"
+            ? "Analysis Report"
+            : `${selectedMetric} Details`}
         </h2>
-        <div className="grid grid-cols-1 gap-3">
-          <Card className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50 shadow-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <Shield className="w-5 h-5 text-red-600 dark:text-red-500 mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-neutral-900 dark:text-neutral-100 font-medium">
-                      Public Endpoints
-                    </h3>
-                    <Badge
-                      variant="destructive"
-                      className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/70"
-                    >
-                      {warnings.publicEndpoints} found
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Multiple API endpoints are publicly accessible without
-                    authentication
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900/50 shadow-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-neutral-900 dark:text-neutral-100 font-medium">
-                      Missing Validation
-                    </h3>
-                    <Badge
-                      variant="outline"
-                      className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-900/50"
-                    >
-                      {warnings.missingValidation} endpoints
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Input parameters lack proper validation and sanitization
-                  </p>
+        {selectedMetric === "OVERALL" ? (
+          <Card className="bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <div className="space-y-3 flex-1">
+                  <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+                    Key Insights
+                  </h3>
+                  {insights.length > 0 ? (
+                    <ul className="space-y-3">
+                      {insights.map((insight: string, idx: number) => (
+                        <li
+                          key={idx}
+                          className="flex gap-2 text-sm text-neutral-600 dark:text-neutral-300"
+                        >
+                          <span className="select-none text-blue-500">•</span>
+                          {insight}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-neutral-500 italic">
+                      No specific insights available.
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
+        ) : (
+          <div className="space-y-4">
+            {(() => {
+              const metricData = ratings[selectedMetric];
+              // Handle mock vs real structure
+              // Real: { score, reason, impact, suggestion, affected_files }
+              // Mock: just a number value
 
-          <Card className="bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/50 shadow-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <Zap className="w-5 h-5 text-orange-600 dark:text-orange-500 mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-neutral-900 dark:text-neutral-100 font-medium">
-                      Performance Risks
-                    </h3>
-                    <Badge
-                      variant="outline"
-                      className="bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-900/50"
-                    >
-                      {warnings.performanceRisks} issues
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Blocking operations and inefficient code patterns detected
-                  </p>
+              if (typeof metricData === "number") {
+                return (
+                  <Card className="bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800">
+                    <CardContent className="p-6 text-center text-neutral-500">
+                      Detailed breakdown not available for mock data.
+                    </CardContent>
+                  </Card>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Suggestion & Reason */}
+                  <Card className="bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 md:col-span-2">
+                    <CardContent className="p-3 space-y-4 [&:last-child]:pb-3">
+                      <div>
+                        <h4 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-500" />
+                          Reason
+                        </h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                          {metricData.reason}
+                        </p>
+                      </div>
+                      <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                        <h4 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1 flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-blue-500" />
+                          Impact
+                        </h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                          {metricData.impact}
+                        </p>
+                      </div>
+                      <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                        <h4 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1 flex items-center gap-2">
+                          <Zap className="w-4 h-4 text-emerald-500" />
+                          Suggestion
+                        </h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                          {metricData.suggestion}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Affected Files */}
+                  <Card className="bg-gray-200 gap-2 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 md:col-span-2">
+                    <CardHeader className="p-3 pb-1 border-b border-neutral-100 dark:border-neutral-800/50">
+                      <CardTitle className="text-sm pb-0 font-semibold flex items-center gap-1">
+                        Affected Files
+                        <Badge
+                          variant="secondary"
+                          className="px-1.5 py-0 text-[10px] h-5 min-w-4 text-center"
+                        >
+                          {metricData.affected_files?.length || 0}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0 pb-0">
+                      {metricData.affected_files &&
+                      metricData.affected_files.length > 0 ? (
+                        <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                          {metricData.affected_files.map(
+                            (file: string, idx: number) => (
+                              <div
+                                key={idx}
+                                className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-400 font-mono flex items-center gap-2 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors"
+                              >
+                                <span className="opacity-50 text-xs">
+                                  {idx + 1}.
+                                </span>
+                                {file}
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-sm text-neutral-500 italic">
+                          No specific files identified.
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       {/* View Details Button */}
       <div className="flex justify-center pt-2">
         <Link
           href="/heatmap"
-          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-sm font-medium cursor-pointer shadow-sm hover:shadow"
+          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-4 py-2 rounded-md transition-all duration-300 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md hover:scale-105"
         >
           View Detailed Analysis
-          <ArrowForward className="w-4 h-4" />
+          <ArrowForward className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>

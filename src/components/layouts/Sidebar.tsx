@@ -135,7 +135,7 @@ export default function Sidebar() {
         {isFiltersExpanded && (
           <div className="px-4 pb-4 space-y-2 pl-9 border border-transparent">
             {/* Filter inputs ... same structure, removed checks for simplicity in this snippet if not changing logic */}
-             <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="high-risk"
                 checked={filters.highRiskOnly}
@@ -150,12 +150,15 @@ export default function Sidebar() {
                 High risk only
               </Label>
             </div>
-             <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="public-endpoints"
                 checked={filters.publicEndpoints}
                 onCheckedChange={(checked) =>
-                  setFilters({ ...filters, publicEndpoints: checked as boolean })
+                  setFilters({
+                    ...filters,
+                    publicEndpoints: checked as boolean,
+                  })
                 }
               />
               <Label
@@ -166,22 +169,25 @@ export default function Sidebar() {
               </Label>
             </div>
             {/* ... other filters ... */}
-             <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="unvalidated"
                 checked={filters.unvalidatedInputs}
                 onCheckedChange={(checked) =>
-                  setFilters({ ...filters, unvalidatedInputs: checked as boolean })
+                  setFilters({
+                    ...filters,
+                    unvalidatedInputs: checked as boolean,
+                  })
                 }
               />
               <Label
                 htmlFor="unvalidated"
                 className="text-xs text-neutral-500 cursor-pointer"
               >
-                 Unvalidated inputs
+                Unvalidated inputs
               </Label>
             </div>
-             <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="large-files"
                 checked={filters.largeFiles}

@@ -123,7 +123,7 @@ function HeatmapView({
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className="border-gray-600 text-neutral-700 hover:bg-neutral-100 bg-neutral-100 "
           >
             Export
           </Button>
