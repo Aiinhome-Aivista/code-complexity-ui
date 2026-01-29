@@ -30,4 +30,10 @@ export const commonService = {
       data: payload,
     });
   },
+  getFileNodeData: async (payload: any): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.POST.FILENODE, {
+      method: "POST",
+      data: payload,
+    });
+  },
 };

@@ -97,7 +97,7 @@ export function RecentSessionsTable({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const router = useRouter();
-  const { setProjectResults, setHeatmapData } = useUIStore();
+  const { setProjectResults, setHeatmapData, setFileNodeData } = useUIStore();
   const { user } = useAuthStore();
 
   const handleViewResults = async (id: number | string) => {
@@ -105,31 +105,53 @@ export function RecentSessionsTable({
       const response = await commonService.getResults(id);
       if (response && response.isSuccess) {
         setProjectResults(response.data);
-        
+
         router.push("/code-health");
 
         // Find the selected session to construct dynamic payload
         const selectedSession = sessions.find((s) => s.id === id);
 
         if (selectedSession) {
-          // Fetch Heatmap Data in background with dynamic IDs
+          // Fetch Heatmap Data and FileNode Data in background with dynamic IDs
           const heatmapPayload = {
-            "project_id": selectedSession.id,
-            "session_id": selectedSession.session_id,
-            "metric": "complexity"
+            project_id: selectedSession.id,
+            session_id: selectedSession.session_id,
+            metric: "complexity",
           };
-          
-          commonService.getHeatmapData(heatmapPayload)
-              .then((heatmapResponse) => {
-                  if (heatmapResponse) {
-                      setHeatmapData(heatmapResponse);
-                  }
-              })
-              .catch((err) => {
-                  console.error("Error fetching heatmap data:", err);
-              });
+
+          // Heatmap Call
+          commonService
+            .getHeatmapData(heatmapPayload)
+            .then((heatmapResponse) => {
+              if (heatmapResponse) {
+                setHeatmapData(heatmapResponse);
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching heatmap data:", err);
+            });
+
+          // FileNode Call (Dynamic Payload)
+          const fileNodePayload = {
+            user_id: user?.id,
+            session_id: selectedSession.session_id,
+          };
+
+          commonService
+            .getFileNodeData(fileNodePayload)
+            .then((fileNodeResponse) => {
+              if (fileNodeResponse) {
+                setFileNodeData(fileNodeResponse);
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching file node data:", err);
+            });
         } else {
-             console.warn("Could not find session details for heatmap fetch, ID:", id);
+          console.warn(
+            "Could not find session details for heatmap fetch, ID:",
+            id,
+          );
         }
       }
     } catch (error) {

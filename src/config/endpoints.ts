@@ -10,5 +10,6 @@ export const API_ENDPOINTS = {
     REGISTER: `${BASE_URL}api/auth/register`,
     UPLOAD: `${BASE_URL}api/visualization/upload`,
     HEATMAP: `${BASE_URL}api/code_heatmap`,
+    FILENODE: `${BASE_URL}api/analyze_project_ai`,
   },
 } as const;

@@ -77,7 +77,7 @@ function HeatmapView({
       {/* Header Section */}
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+          <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
             Code Risk Heatmap
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -244,7 +244,7 @@ export default function HeatmapPage() {
         const parsed = JSON.parse(storageData);
         if (parsed.state && parsed.state.heatmapData) {
           const loadedData = parsed.state.heatmapData;
-          console.log("Heatmap data from localStorage:", loadedData);
+         /*  console.log("Heatmap data from localStorage:", loadedData); */
           
           let files: any[] = [];
           
@@ -258,9 +258,6 @@ export default function HeatmapPage() {
           }
 
           if (files.length > 0) {
-            // Transform API data to component format
-            // API returns 'risk' for the requested metric. We map this to all metric fields 
-            // for visualization purposes, as the API return is specific to one metric at a time.
             const transformedData: HeatmapData[] = files.map((f: any) => ({
               file: f.filename,
               lines: f.lines,

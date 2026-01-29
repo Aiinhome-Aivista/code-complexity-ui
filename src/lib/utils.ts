@@ -108,7 +108,7 @@ export function filterTree(nodes: FileNode[], filters: FilterState): FileNode[] 
 }
 
 function checkNodeMatches(node: FileNode, filters: FilterState): boolean {
-  if (filters.highRiskOnly && node.risk !== "high") return false;
+  if (filters.highRiskOnly && node.risk !== "high" && node.risk !== "critical") return false;
   
   if (filters.largeFiles && node.type === "file") {
      if ((node.lines || 0) <= 500) return false;

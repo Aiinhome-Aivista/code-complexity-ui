@@ -1,6 +1,6 @@
 // Mock data for Code Quality Analysis Tool
 
-export type RiskLevel = "safe" | "moderate" | "high";
+export type RiskLevel = "safe" | "moderate" | "high" | "critical" | "low";
 export type ExperienceLevel = "Junior" | "Mid" | "Senior";
 export type MetricType =
   | "Complexity"

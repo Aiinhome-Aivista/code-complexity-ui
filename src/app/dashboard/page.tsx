@@ -13,15 +13,16 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const { setProjectResults, setHeatmapData } = useUIStore();
+  const { setProjectResults, setHeatmapData, setFileNodeData } = useUIStore();
 
   useEffect(() => {
     // Clear previous analysis data when entering dashboard
     setProjectResults(null);
     setHeatmapData(null);
+    setFileNodeData(null);
     // Explicitly clear storage to ensure no ghost data remains
     localStorage.removeItem("code-heatmap-storage-v1");
-  }, [setProjectResults, setHeatmapData]);
+  }, [setProjectResults, setHeatmapData, setFileNodeData]);
 
   useEffect(() => {
     setIsUploadModalOpen(searchParams.get("analysis") === "agentic");

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   Warning as AlertTriangle,
   Shield,
@@ -12,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Issue, codeExample, issuesForFile } from "@/data/mockData";
 import { ScrollArea } from "@/components/ui/ScrollArea";
+import { useUIStore } from "@/store/uiStore";
 
 interface FileCodeViewProps {
   code: string;
@@ -240,12 +243,56 @@ export function FileCodeView({ code, issues, fileName }: FileCodeViewProps) {
 }
 
 export default function CodeViewPage() {
+  const fileNodeData = useUIStore((state) => state.fileNodeData);
+  const selectedFileNode = useUIStore((state) => state.selectedFileNode);
+  
+  const [code, setCode] = useState<string>("// Select a file to view code");
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    console.log("CodeView File Node Data:", fileNodeData);
+    console.log("Selected File Node:", selectedFileNode);
+
+    if (selectedFileNode && selectedFileNode.found_at) {
+        setLoading(true);
+        // Fetch code content
+        fetch(selectedFileNode.found_at)
+            .then(res => res.text())
+            .then(text => setCode(text))
+            .catch(err => {
+                console.error("Error fetching code:", err);
+                setCode("// Error loading file content.");
+            })
+            .finally(() => setLoading(false));
+
+        // Transform issues
+        if (selectedFileNode.issues) {
+            const transformedIssues: Issue[] = selectedFileNode.issues.map((apiIssue: any, index: number) => ({
+                id: `api-${index}`,
+                type: (apiIssue.type?.toLowerCase() as any) || "complexity", 
+                severity: (apiIssue.severity?.toLowerCase() as any) || "moderate",
+                line: apiIssue.line,
+                message: apiIssue.title,
+                rule: apiIssue.title, 
+                confidence: 100, 
+                explanation: apiIssue.suggested_explanation,
+                facts: []
+            }));
+            setIssues(transformedIssues);
+        } else {
+            setIssues([]);
+        }
+    } 
+
+  }, [fileNodeData, selectedFileNode]);
+
   return (
     <div className="h-full overflow-hidden">
       <FileCodeView
-        code={codeExample}
-        issues={issuesForFile}
-        fileName="src/api/users.ts"
+        code={code}
+        issues={issues}
+        fileName={selectedFileNode?.name || "No File Selected"}
       />
     </div>
   );

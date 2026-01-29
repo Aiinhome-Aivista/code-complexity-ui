@@ -11,6 +11,10 @@ interface UIState {
   setProjectResults: (results: any) => void;
   heatmapData: any | null;
   setHeatmapData: (data: any) => void;
+  fileNodeData: any | null;
+  setFileNodeData: (data: any) => void;
+  selectedFileNode: any | null;
+  setSelectedFileNode: (node: any) => void;
   fileTree: any[];
   setFileTree: (tree: any[]) => void;
 }
@@ -26,6 +30,10 @@ export const useUIStore = create<UIState>()(
       setProjectResults: (results) => set({ projectResults: results }),
       heatmapData: null,
       setHeatmapData: (data) => set({ heatmapData: data }),
+      fileNodeData: null,
+      setFileNodeData: (data) => set({ fileNodeData: data }),
+      selectedFileNode: null,
+      setSelectedFileNode: (node) => set({ selectedFileNode: node }),
       fileTree: initialFileTree,
       setFileTree: (tree) => set({ fileTree: tree }),
     }),

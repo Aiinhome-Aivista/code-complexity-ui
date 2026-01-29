@@ -29,7 +29,7 @@ function Page() {
         </p>
       </div>
 
-      <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm flex-1 overflow-hidden min-h-[600px]">
+      <Card className="bg-gray-300 border-neutral-200  shadow-sm flex-1 overflow-hidden min-h-[600px]">
         <CardContent className="p-0 h-full w-full custom-scrollbar overflow-auto">
           {graphUrl ? (
             <iframe
@@ -37,7 +37,7 @@ function Page() {
               className="w-full h-full border-none custom-scrollbar bg-white dark:bg-neutral-900"
               title="Project Relationship Graph"
               sandbox="allow-scripts allow-same-origin"
-              style={{ 
+              style={{
                 colorScheme: "dark light",
               }}
             />

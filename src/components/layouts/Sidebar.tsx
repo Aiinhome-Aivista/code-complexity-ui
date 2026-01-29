@@ -8,14 +8,67 @@ import {
   Folder,
   FilterList,
 } from "@mui/icons-material";
-import { FileNode, RiskLevel } from "@/data/mockData";
 import { Checkbox } from "../ui/Checkbox";
 import { Label } from "../ui/Label";
 import { filterTree } from "@/lib/utils";
 import { useUIStore } from "@/store/uiStore";
 
+type RiskLevel = "safe" | "moderate" | "high" | "critical" | "low";
+
+interface FileNode {
+  id: string;
+  name: string;
+  type: "file" | "folder";
+  risk: RiskLevel;
+  children?: FileNode[];
+  path: string;
+  lines?: number;
+  isPublic?: boolean;
+  hasUnvalidatedInputs?: boolean;
+  found_at?: string;
+  issues?: any[];
+}
+
 export default function Sidebar() {
-  const fileTree = useUIStore((state) => state.fileTree);
+  const fileNodeData = useUIStore((state) => state.fileNodeData);
+  const selectedFileNode = useUIStore((state) => state.selectedFileNode);
+  const setSelectedFileNode = useUIStore((state) => state.setSelectedFileNode);
+
+  // Transform API data to FileNode structure
+  const fileTree = useMemo(() => {
+    if (!fileNodeData?.data?.FileNode) return [];
+
+    const sortNodes = (a: FileNode, b: FileNode) => {
+      if (a.type === b.type) {
+        return a.name.localeCompare(b.name);
+      }
+      return a.type === "folder" ? -1 : 1;
+    };
+
+    const transformNode = (node: any): FileNode => {
+      const children = node.children?.map(transformNode);
+      
+      if (children) {
+        children.sort(sortNodes);
+      }
+
+      return {
+        id: node.id,
+        name: node.name,
+        type: node.type,
+        risk: node.risk?.toLowerCase() as RiskLevel,
+        children: children,
+        path: node.path,
+        lines: node.lines,
+        found_at: node.found_at,
+        issues: node.issues,
+      };
+    };
+
+    const nodes = fileNodeData.data.FileNode.map(transformNode);
+    return nodes.sort(sortNodes);
+  }, [fileNodeData]);
+
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set(),
   );
@@ -48,30 +101,35 @@ export default function Sidebar() {
   const getRiskColor = (risk: RiskLevel) => {
     switch (risk) {
       case "safe":
+      case "low":
         return "bg-green-500";
       case "moderate":
         return "bg-yellow-500";
       case "high":
+        return "bg-orange-500";
+      case "critical":
         return "bg-red-500";
+      default:
+        return "bg-gray-300";
     }
   };
 
   const renderFileNode = (node: FileNode, depth: number = 0) => {
     const isExpanded = expandedFolders.has(node.id);
-    const isSelected = false; // TODO: Connect to selection state if needed
+    const isSelected = selectedFileNode?.id === node.id;
 
     return (
       <div key={node.id}>
         <div
           className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-indigo-50 transition-colors ${
-            isSelected ? "bg-indigo-50" : ""
+            isSelected ? "bg-indigo-100 dark:bg-indigo-900/30" : ""
           }`}
           style={{ paddingLeft: `${depth * 16 + 12}px` }}
           onClick={() => {
             if (node.type === "folder") {
               toggleFolder(node.id);
             } else {
-              // Select file logic if needed
+              setSelectedFileNode(node);
             }
           }}
         >
