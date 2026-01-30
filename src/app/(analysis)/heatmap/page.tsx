@@ -73,7 +73,7 @@ function HeatmapView({
     : data;
 
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-gray-50 dark:bg-neutral-950">
+    <div className="p-6 space-y-6 min-h-screen bg-gray-100 dark:bg-neutral-950">
       {/* Header Section */}
       <div className="space-y-4">
         <div>
@@ -109,13 +109,13 @@ function HeatmapView({
       </div>
 
       {/* Legend Card */}
-      <div className="bg-gray-200 dark:bg-neutral-900 rounded-xl p-5 border border-neutral-300 dark:border-neutral-800 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl p-5 border border-neutral-300 dark:border-neutral-800 shadow-sm">
         <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3 flex justify-between items-center">
           Risk Level Legend
           {selectedRiskFilter && (
             <button 
               onClick={() => setSelectedRiskFilter(null)}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline cursor-pointer"
+              className="text-xs text-indigo-600 hover:text-indigo-700 font-medium hover:underline cursor-pointer"
             >
               Clear Filter
             </button>
@@ -147,7 +147,7 @@ function HeatmapView({
       </div>
 
       {/* File List / Heatmap Bars */}
-      <div className="bg-gray-200 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-300 dark:border-neutral-800 shadow-sm space-y-2">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-300 dark:border-neutral-800 shadow-sm space-y-2">
         {Array.isArray(filteredData) && filteredData.length > 0 ? (
           filteredData.map((file, index) => {
             const value = getMetricValue(file, selectedMetric);
@@ -160,7 +160,7 @@ function HeatmapView({
                   onClick={() => setSelectedFile(selectedFile?.file === file.file ? null : file)}
                   className={`space-y-1.5 p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                     isSelected
-                      ? "bg-white dark:bg-neutral-800 border-blue-500 ring-1 ring-blue-500"
+                      ? "bg-white dark:bg-neutral-800 border-indigo-500 ring-1 ring-indigo-500"
                       : "hover:bg-gray-300/50 dark:hover:bg-neutral-800 border-transparent"
                   }`}
                 >

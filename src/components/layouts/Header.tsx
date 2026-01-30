@@ -13,9 +13,11 @@ import {
 } from "@mui/icons-material";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/store/authStore";
+import { useUIStore } from "@/store/uiStore";
 
 function Header() {
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { activeProjectName, setActiveProjectName } = useUIStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -24,6 +26,13 @@ function Header() {
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
   const logoLink = isAuthenticated ? "/dashboard" : "/home";
+
+  // Clear active project name when returning to dashboard
+  useEffect(() => {
+    if (pathname === "/dashboard") {
+      setActiveProjectName(null);
+    }
+  }, [pathname, setActiveProjectName]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -52,7 +61,7 @@ function Header() {
 
   return (
     <>
-      <div className="h-full border-b border-neutral-200 flex justify-between items-center px-4 bg-gray-150 backdrop-blur-sm transition-colors duration-300">
+      <div className="h-full border-b border-neutral-200 flex justify-between items-center px-4 bg-gray-200 backdrop-blur-sm transition-colors duration-300">
         <div className="flex text-neutral-900 gap-8 items-center">
           <div className="flex gap-2 items-center">
             <Link
@@ -112,14 +121,18 @@ function Header() {
                           sx={{ fontSize: 16 }}
                           className="text-neutral-400"
                         />
-                        {isLast ? (
+                        {isLast && !activeProjectName ? (
                           <span className="text-neutral-500 font-semibold cursor-default">
                             {segmentName}
                           </span>
                         ) : (
                           <Link
                             href={path}
-                            className="hover:text-indigo-600 transition-colors cursor-pointer"
+                            className={
+                              isLast && activeProjectName
+                                ? "text-neutral-500 font-semibold cursor-default"
+                                : "hover:text-indigo-600 transition-colors cursor-pointer"
+                            }
                           >
                             {segmentName}
                           </Link>
@@ -127,6 +140,19 @@ function Header() {
                       </div>
                     );
                   })}
+
+                {/* Active Project Name Append */}
+                {activeProjectName && (
+                  <div className="flex items-center gap-1">
+                    <KeyboardArrowRight
+                      sx={{ fontSize: 16 }}
+                      className="text-neutral-400"
+                    />
+                    <span className="text-neutral-500 font-semibold cursor-default">
+                      {activeProjectName}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

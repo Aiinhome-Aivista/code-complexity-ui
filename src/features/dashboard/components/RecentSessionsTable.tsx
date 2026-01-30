@@ -25,6 +25,13 @@ import {
   FormControl,
   SelectChangeEvent,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Search,
@@ -96,8 +103,19 @@ export function RecentSessionsTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Delete & Toast State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | string | null>(null);
+  const [toast, setToast] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+
   const router = useRouter();
-  const { setProjectResults, setHeatmapData, setFileNodeData } = useUIStore();
+  const {
+    setProjectResults,
+    setHeatmapData,
+    setFileNodeData,
+    setActiveProjectName,
+  } = useUIStore();
   const { user } = useAuthStore();
 
   const handleViewResults = async (id: number | string) => {
@@ -106,12 +124,13 @@ export function RecentSessionsTable({
       if (response && response.isSuccess) {
         setProjectResults(response.data);
 
-        router.push("/code-health");
-
-        // Find the selected session to construct dynamic payload
+        // Find the selected session...
         const selectedSession = sessions.find((s) => s.id === id);
 
         if (selectedSession) {
+          setActiveProjectName(selectedSession.name);
+          router.push("/code-health");
+
           // Fetch Heatmap Data and FileNode Data in background with dynamic IDs
           const heatmapPayload = {
             project_id: selectedSession.id,
@@ -155,8 +174,34 @@ export function RecentSessionsTable({
         }
       }
     } catch (error) {
-      console.error("Error fetching project results:", error);
+       console.error("Error fetching project results:", error);
     }
+  };
+
+  const handleDeleteClick = (id: number | string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const activeDelete = async () => {
+    if (!deleteTargetId) return;
+    
+    try {
+      await commonService.deleteProject(deleteTargetId);
+      setToast({ open: true, message: "Session deleted successfully", severity: "success" });
+      if (user) fetchSessions();
+    } catch (error) {
+       console.error("Error deleting session:", error);
+       setToast({ open: true, message: "Failed to delete session", severity: "error" });
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeleteTargetId(null);
+    }
+  };
+
+  const handleCloseToast = () => {
+    setToast({ ...toast, open: false });
   };
 
   const fetchSessions = async (search?: string, status?: string) => {
@@ -509,6 +554,7 @@ export function RecentSessionsTable({
                         </IconButton>
                         <IconButton
                           size="small"
+                          onClick={(e) => handleDeleteClick(session.id, e)}
                           sx={{
                             color: "var(--text-secondary)",
                             "&:hover": { color: "var(--danger-main)" },
@@ -592,6 +638,60 @@ export function RecentSessionsTable({
           }}
         />
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          style: {
+            borderRadius: 12,
+            padding: "8px",
+            minWidth: "320px",
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: "var(--text-primary)" }}>
+          Delete Session?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: "var(--text-secondary)" }}>
+            Are you sure you want to delete this analysis session? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ padding: 2 }}>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)}
+            variant="ghost"
+            className="text-neutral-600 hover:bg-neutral-100"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={activeDelete}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Toast Notification */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseToast}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: "100%", borderRadius: 2 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

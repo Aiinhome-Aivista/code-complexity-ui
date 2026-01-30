@@ -11,5 +11,6 @@ export const API_ENDPOINTS = {
     UPLOAD: `${BASE_URL}api/visualization/upload`,
     HEATMAP: `${BASE_URL}api/code_heatmap`,
     FILENODE: `${BASE_URL}api/analyze_project_ai`,
+    DELETE: `${BASE_URL}api/projects/delete`,
   },
 } as const;

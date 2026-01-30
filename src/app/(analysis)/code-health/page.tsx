@@ -100,7 +100,7 @@ export default function CodeHealthAnalysis() {
   };
 
   return (
-    <div className="p-6 space-y-6 min-h-screen">
+    <div className="p-6 space-y-6 min-h-screen bg-gray-100 dark:bg-neutral-950">
       <div>
         <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
           Code Health Analysis
@@ -111,7 +111,7 @@ export default function CodeHealthAnalysis() {
       </div>
 
       {/* Main Score Card */}
-      <Card className="px-0 bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
+      <Card className="px-0 bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
         <CardContent className="flex flex-col items-center gap-6 pt-6 px-0">
           {/* Ratings Chips */}
           <div className="flex flex-wrap justify-center gap-2 px-4">
@@ -196,7 +196,7 @@ export default function CodeHealthAnalysis() {
         </h2>
 
         {selectedMetric === "OVERALL" ? (
-          <Card className="bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
+          <Card className="bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
             <CardContent className="px-3 py-4 [&:last-child]:pb-4 space-y-4">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
@@ -237,7 +237,7 @@ export default function CodeHealthAnalysis() {
 
               if (typeof metricData === "number") {
                 return (
-                  <Card className="bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800">
+                  <Card className="bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800">
                     <CardContent className="p-6 text-center text-neutral-500">
                       Detailed breakdown not available for mock data.
                     </CardContent>
@@ -248,7 +248,7 @@ export default function CodeHealthAnalysis() {
               return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Suggestion & Reason */}
-                  <Card className="bg-gray-200 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 md:col-span-2">
+                  <Card className="bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 md:col-span-2">
                     <CardContent className="p-3 space-y-4 [&:last-child]:pb-3">
                       <div>
                         <h4 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1 flex items-center gap-2">
@@ -281,7 +281,7 @@ export default function CodeHealthAnalysis() {
                   </Card>
 
                   {/* Affected Files */}
-                  <Card className="bg-gray-200 gap-2 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 md:col-span-2">
+                  <Card className="bg-white gap-2 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 md:col-span-2">
                     <CardHeader className="p-3 pb-1 border-b border-neutral-100 dark:border-neutral-800/50">
                       <CardTitle className="text-sm pb-0 font-semibold flex items-center gap-1">
                         Affected Files
@@ -329,7 +329,7 @@ export default function CodeHealthAnalysis() {
       <div className="flex justify-center pt-2">
         <Link
           href="/heatmap"
-          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-4 py-2 rounded-md transition-all duration-300 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md hover:scale-105"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 px-4 py-2 rounded-md transition-all duration-300 text-xs font-semibold cursor-pointer shadow-sm hover:shadow-md hover:scale-105"
         >
           View Detailed Analysis
           <ArrowForward className="w-3.5 h-3.5" />

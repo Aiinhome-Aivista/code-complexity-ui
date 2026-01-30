@@ -208,7 +208,7 @@ export function UploadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/90">
+      <DialogContent className="sm:max-w-[500px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/80">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900">
             Upload Project

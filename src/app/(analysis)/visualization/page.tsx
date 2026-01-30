@@ -19,7 +19,7 @@ function Page() {
   }
 
   return (
-    <div className="p-6 space-y-6 flex flex-col h-full">
+    <div className="p-6 space-y-6 flex flex-col h-full bg-gray-100 dark:bg-neutral-950">
       <div>
         <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
           Project Visualization
@@ -29,12 +29,12 @@ function Page() {
         </p>
       </div>
 
-      <Card className="bg-gray-300 border-neutral-200  shadow-sm flex-1 overflow-hidden min-h-[600px]">
+      <Card className="bg-white border-neutral-200  shadow-sm flex-1 overflow-hidden min-h-[600px]">
         <CardContent className="p-0 h-full w-full custom-scrollbar overflow-auto">
           {graphUrl ? (
             <iframe
               src={graphUrl}
-              className="w-full h-full border-none custom-scrollbar bg-gray-200 dark:bg-neutral-900"
+              className="w-full h-full border-none custom-scrollbar bg-white dark:bg-neutral-900"
               title="Project Relationship Graph"
               sandbox="allow-scripts allow-same-origin"
               style={{

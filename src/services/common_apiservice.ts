@@ -36,4 +36,9 @@ export const commonService = {
       data: payload,
     });
   },
+  deleteProject: async (id: number | string): Promise<any | null> => {
+    return apiservice<any>(`${API_ENDPOINTS.POST.DELETE}/${id}`, {
+      method: "DELETE",
+    });
+  },
 };

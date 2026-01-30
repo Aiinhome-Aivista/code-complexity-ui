@@ -13,6 +13,7 @@ import { Checkbox } from "../ui/Checkbox";
 import { Label } from "../ui/Label";
 import { filterTree } from "@/lib/utils";
 import { useUIStore } from "@/store/uiStore";
+import { useRouter } from "next/navigation";
 
 type RiskLevel = "safe" | "moderate" | "high" | "critical" | "low";
 
@@ -34,6 +35,7 @@ export default function Sidebar() {
   const fileNodeData = useUIStore((state) => state.fileNodeData);
   const selectedFileNode = useUIStore((state) => state.selectedFileNode);
   const setSelectedFileNode = useUIStore((state) => state.setSelectedFileNode);
+  const router = useRouter();
 
   // Transform API data to FileNode structure
   const fileTree = useMemo(() => {
@@ -129,8 +131,8 @@ export default function Sidebar() {
     return (
       <div key={node.id}>
         <div
-          className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-indigo-50 transition-colors ${
-            isSelected ? "bg-indigo-100 dark:bg-indigo-900/30" : ""
+          className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-indigo-100 transition-colors ${
+            isSelected ? "bg-indigo-200 dark:bg-indigo-900/30" : ""
           }`}
           style={{ paddingLeft: `${depth * 16 + 12}px` }}
           onClick={() => {
@@ -138,6 +140,10 @@ export default function Sidebar() {
               toggleFolder(node.id);
             } else {
               setSelectedFileNode(node);
+              // Update URL and navigate
+              const params = new URLSearchParams(window.location.search);
+              params.set("file", node.name);
+              router.push(`/code-view?${params.toString()}`);
             }
           }}
         >
@@ -179,7 +185,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-80 border-r border-neutral-200 bg-gray-100 flex flex-col h-full transition-colors duration-300">
+    <div className="w-80 border-r border-neutral-200 bg-gray-200 flex flex-col h-full transition-colors duration-300">
       {/* Collapsible Filters Header */}
       <div className="border-b border-neutral-200">
         <div
