@@ -53,7 +53,7 @@ export default function CodeHealthAnalysis() {
       const parsedData = JSON.parse(storageData);
       if (parsedData && parsedData.state && parsedData.state.projectResults) {
         setResults(parsedData.state.projectResults);
-        console.log("results:", parsedData.state.projectResults);
+        /* console.log("results:", parsedData.state.projectResults); */
       }
     }
   }, []);
