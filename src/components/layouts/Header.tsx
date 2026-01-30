@@ -52,7 +52,7 @@ function Header() {
 
   return (
     <>
-      <div className="h-full border-b border-neutral-200 flex justify-between items-center px-4 bg-[#f3f4f6] backdrop-blur-sm transition-colors duration-300">
+      <div className="h-full border-b border-neutral-200 flex justify-between items-center px-4 bg-gray-150 backdrop-blur-sm transition-colors duration-300">
         <div className="flex text-neutral-900 gap-8 items-center">
           <div className="flex gap-2 items-center">
             <Link
@@ -64,13 +64,16 @@ function Header() {
               </div>
               <h3 className="text-xl font-bold tracking-tight">CodeQuality</h3>
             </Link>
-            
+
             {/* Breadcrumbs */}
             {isAuthenticated && pathname !== "/home" && pathname !== "/" && (
               <div className="hidden md:flex items-center gap-1 ml-2 text-sm font-medium text-neutral-500 animate-fade-in">
                 {/* Always show Dashboard as root */}
                 <div className="flex items-center gap-1">
-                  <KeyboardArrowRight sx={{ fontSize: 16 }} className="text-neutral-400" />
+                  <KeyboardArrowRight
+                    sx={{ fontSize: 16 }}
+                    className="text-neutral-400"
+                  />
                   {pathname === "/dashboard" ? (
                     <span className="text-neutral-800 font-semibold cursor-default">
                       Dashboard
@@ -86,36 +89,44 @@ function Header() {
                 </div>
 
                 {/* Map remaining segments */}
-                {pathname.split("/").filter(Boolean).map((segment, index, array) => {
-                  if (segment.toLowerCase() === "dashboard") return null;
+                {pathname
+                  .split("/")
+                  .filter(Boolean)
+                  .map((segment, index, array) => {
+                    if (segment.toLowerCase() === "dashboard") return null;
 
-                  const path = `/${array.slice(0, index + 1).join("/")}`;
-                  const isLast = index === array.length - 1;
-                  
-                  // Format segment name
-                  const segmentName = segment
-                    .split("-")
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(" ");
+                    const path = `/${array.slice(0, index + 1).join("/")}`;
+                    const isLast = index === array.length - 1;
 
-                  return (
-                    <div key={path} className="flex items-center gap-1">
-                      <KeyboardArrowRight sx={{ fontSize: 16 }} className="text-neutral-400" />
-                      {isLast ? (
-                        <span className="text-neutral-500 font-semibold cursor-default">
-                          {segmentName}
-                        </span>
-                      ) : (
-                        <Link 
-                          href={path}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          {segmentName}
-                        </Link>
-                      )}
-                    </div>
-                  );
-                })}
+                    // Format segment name
+                    const segmentName = segment
+                      .split("-")
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1),
+                      )
+                      .join(" ");
+
+                    return (
+                      <div key={path} className="flex items-center gap-1">
+                        <KeyboardArrowRight
+                          sx={{ fontSize: 16 }}
+                          className="text-neutral-400"
+                        />
+                        {isLast ? (
+                          <span className="text-neutral-500 font-semibold cursor-default">
+                            {segmentName}
+                          </span>
+                        ) : (
+                          <Link
+                            href={path}
+                            className="hover:text-indigo-600 transition-colors cursor-pointer"
+                          >
+                            {segmentName}
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>
