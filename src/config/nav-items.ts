@@ -25,11 +25,11 @@ export const navItems: NavItem[] = [
     href: "/heatmap",
     icon: "Analytics",
   },
-  /*  {
+   {
     title: "Code View",
     href: "/code-view",
     icon: "Code",
-  }, */
+  },
   /* {
     title: "API Analysis",
     href: "/api-analysis",

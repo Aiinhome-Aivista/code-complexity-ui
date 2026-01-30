@@ -17,8 +17,10 @@ import {
 } from "@mui/icons-material";
 import { cn } from "@/lib/utils";
 import { commonService } from "@/services/common_apiservice";
-import { Snackbar, Alert } from "@mui/material";
+import { Snackbar, Alert, CircularProgress } from "@mui/material";
 import { useAuthStore } from "@/store/authStore";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 
 interface UploadModalProps {
   open: boolean;
@@ -28,7 +30,7 @@ interface UploadModalProps {
 
 // Add type for webkitdirectory
 declare module "react" {
-  interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
+  interface InputHTMLAttributes<T> extends React.HTMLAttributes<T> {
     webkitdirectory?: string;
     directory?: string;
   }
@@ -40,6 +42,7 @@ export function UploadModal({
   onUploadSuccess,
 }: UploadModalProps) {
   const { user } = useAuthStore();
+  const [projectName, setProjectName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     name: string;
@@ -138,7 +141,7 @@ export function UploadModal({
   };
 
   const handleUpload = async () => {
-    if (!selectedItem) return;
+    if (!selectedItem || !projectName.trim()) return;
 
     if (!user) {
       setToast({
@@ -151,6 +154,7 @@ export function UploadModal({
 
     const formData = new FormData();
     formData.append("user_id", user.id.toString());
+    formData.append("project_name", projectName.trim());
 
     if (fileInputRef.current?.files?.length) {
       Array.from(fileInputRef.current.files).forEach((file) => {
@@ -177,6 +181,7 @@ export function UploadModal({
       }
       onOpenChange(false);
       setSelectedItem(null);
+      setProjectName(""); // Reset project name
     } catch (error) {
       console.error("Upload failed", error);
       setToast({
@@ -196,13 +201,14 @@ export function UploadModal({
   const resetSelection = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     setSelectedItem(null);
+    setProjectName("");
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (folderInputRef.current) folderInputRef.current.value = "";
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-gray-300 border-gray-400 text-gray-900 [&>button>svg]:!text-black">
+      <DialogContent className="sm:max-w-[500px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/90">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900">
             Upload Project
@@ -212,16 +218,41 @@ export function UploadModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-6">
+        <div className="flex flex-col gap-2">
+          <div className="space-y-2">
+            <Label
+              htmlFor="project-name"
+              className="text-gray-700 font-semibold"
+            >
+              Project Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="project-name"
+              placeholder="Insert Project Name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              className="bg-gray-150 border border-gray-500/50 text-gray-700 focus:border-gray-500/10 placeholder:text-gray-600"
+            />
+          </div>
+
           <div
             className={cn(
-              "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden",
+              "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden min-h-[250px]", // Added min-h
               isDragging ? "border-blue-600 bg-blue-100" : "border-gray-500 ",
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
+            {isUploading && (
+              <div className="absolute inset-0 bg-gray-200/80 z-50 flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in duration-200">
+                <CircularProgress size={50} className="text-blue-600/30 mb-4" />
+                <p className="text-blue-700/70 font-semibold animate-pulse">
+                  Uploading Project...
+                </p>
+              </div>
+            )}
+
             {/* Hidden Inputs */}
             <input
               ref={fileInputRef}
@@ -240,7 +271,7 @@ export function UploadModal({
 
             {selectedItem ? (
               <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 z-10">
-                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 text-blue-700">
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 text-blue-700/90">
                   {selectedItem.type === "folder" ? (
                     <FolderIcon style={{ fontSize: 32 }} />
                   ) : (
@@ -267,7 +298,7 @@ export function UploadModal({
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 z-10 w-full">
-                <div className="w-16 h-16 rounded-full bg-gray-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200">
                   <CloudUpload
                     className="text-gray-700 group-hover:text-blue-700 transition-colors"
                     style={{ fontSize: 32 }}
@@ -288,7 +319,7 @@ export function UploadModal({
                     disabled={isDragging}
                     variant="secondary"
                     size="default"
-                    className="w-full bg-gray-400/60 hover:bg-gray-400/30 hover:scale-101 border border-gray-400 text-gray-900 h-10 justify-start px-4 cursor-pointer"
+                    className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent bubbling
                       handleFileClick();
@@ -301,7 +332,7 @@ export function UploadModal({
                     disabled={isDragging}
                     variant="secondary"
                     size="default"
-                    className="w-full bg-gray-400/60 hover:bg-gray-400/30 hover:scale-101  border border-gray-400 text-gray-900 h-10 justify-start px-4 cursor-pointer"
+                    className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101  text-gray-900 h-10 justify-start px-4 cursor-pointer"
                     onClick={handleFolderClick}
                   >
                     <FolderIcon className="mr-3 h-5 w-5 text-gray-600" />
@@ -316,7 +347,7 @@ export function UploadModal({
         <DialogFooter className="gap-2 sm:gap-0">
           <Button
             variant="outline"
-            className="cursor-pointer border-gray-500 text-white bg-gray-800/40 hover:bg-gray-800/50"
+            className="cursor-pointer border-gray-500 text-white bg-gray-800/30 hover:bg-gray-800/40"
             disabled={isUploading}
             onClick={() => {
               resetSelection();
@@ -326,10 +357,10 @@ export function UploadModal({
             Cancel
           </Button>
           <Button
-            disabled={!selectedItem || isUploading}
+            disabled={!selectedItem || isUploading || !projectName.trim()}
             onClick={handleUpload}
             className={cn(
-              "bg-blue-700 hover:bg-blue-800 text-white cursor-pointer shadow-sm",
+              "bg-blue-800/80 hover:bg-blue-700/80 text-white cursor-pointer shadow-sm",
               isUploading && "text-xs",
             )}
           >

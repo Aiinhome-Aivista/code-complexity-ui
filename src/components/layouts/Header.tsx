@@ -203,7 +203,7 @@ function Header() {
                         <div className="text-xs font-semibold text-neutral-400 mb-1 uppercase tracking-wider">
                           Plan
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-neutral-700 font-medium bg-amber-50/60 px-2 py-1.5 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-neutral-700 font-medium hover:bg-amber-50/50 px-2 py-1.5 rounded-lg cursor-default">
                           <PremiumIcon
                             sx={{ fontSize: 16 }}
                             className="text-amber-500"
