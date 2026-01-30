@@ -214,7 +214,7 @@ function Header() {
                       <div className="px-2">
                         <div
                           onClick={handleLogout}
-                          className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-600 hover:text-red-600 hover:bg-red-50/50 cursor-pointer transition-colors group"
+                          className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-600 hover:text-red-600 hover:bg-red-50/40 cursor-pointer transition-colors group"
                         >
                           <LogoutIcon
                             sx={{ fontSize: 18 }}
