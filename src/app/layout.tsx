@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Header from "@/components/layouts/Header";
-import { UserMenu } from "@/components/layouts/UserMenu";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
@@ -25,7 +24,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <UserMenu />
             <header className="h-16 flex-shrink-0">
               <Header />
             </header>

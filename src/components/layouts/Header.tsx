@@ -9,6 +9,7 @@ import {
   Login as LoginIcon,
   WorkspacePremium as PremiumIcon,
   Settings as SettingsIcon,
+  KeyboardArrowRight,
 } from "@mui/icons-material";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/store/authStore";
@@ -63,6 +64,60 @@ function Header() {
               </div>
               <h3 className="text-xl font-bold tracking-tight">CodeQuality</h3>
             </Link>
+            
+            {/* Breadcrumbs */}
+            {isAuthenticated && pathname !== "/home" && pathname !== "/" && (
+              <div className="hidden md:flex items-center gap-1 ml-2 text-sm font-medium text-neutral-500 animate-fade-in">
+                {/* Always show Dashboard as root */}
+                <div className="flex items-center gap-1">
+                  <KeyboardArrowRight sx={{ fontSize: 16 }} className="text-neutral-400" />
+                  {pathname === "/dashboard" ? (
+                    <span className="text-neutral-800 font-semibold cursor-default">
+                      Dashboard
+                    </span>
+                  ) : (
+                    <Link
+                      href="/dashboard"
+                      className="hover:text-indigo-600 transition-colors cursor-pointer"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
+                </div>
+
+                {/* Map remaining segments */}
+                {pathname.split("/").filter(Boolean).map((segment, index, array) => {
+                  if (segment.toLowerCase() === "dashboard") return null;
+
+                  const path = `/${array.slice(0, index + 1).join("/")}`;
+                  const isLast = index === array.length - 1;
+                  
+                  // Format segment name
+                  const segmentName = segment
+                    .split("-")
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ");
+
+                  return (
+                    <div key={path} className="flex items-center gap-1">
+                      <KeyboardArrowRight sx={{ fontSize: 16 }} className="text-neutral-400" />
+                      {isLast ? (
+                        <span className="text-neutral-500 font-semibold cursor-default">
+                          {segmentName}
+                        </span>
+                      ) : (
+                        <Link 
+                          href={path}
+                          className="hover:text-indigo-600 transition-colors cursor-pointer"
+                        >
+                          {segmentName}
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-8">
@@ -111,9 +166,9 @@ function Header() {
             <div className="flex items-center relative" ref={dropdownRef}>
               {isAuthenticated ? (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-600 font-medium border border-transparent">
-                      <PersonOutlineIcon sx={{ fontSize: 18 }} />
-                      <span className="text-sm">{user?.name || "User"}</span>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-neutral-600 font-medium border border-transparent cursor-default">
+                    <PersonOutlineIcon sx={{ fontSize: 18 }} />
+                    <span className="text-sm">{user?.name || "User"}</span>
                   </div>
 
                   <div className="h-5 w-px bg-neutral-200 mx-1"></div>
@@ -122,22 +177,22 @@ function Header() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className={`cursor-pointer flex items-center gap-2 text-neutral-600 font-medium hover:text-indigo-700 hover:bg-indigo-50 transition-all border border-transparent hover:border-indigo-100 rounded-lg px-3 ${isDropdownOpen ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : ''}`}
+                    className={`cursor-pointer flex items-center gap-2 text-neutral-600 font-medium hover:text-indigo-700 hover:bg-indigo-50 transition-all border border-transparent hover:border-indigo-100 rounded-lg px-3 ${isDropdownOpen ? "bg-indigo-50 text-indigo-700 border-indigo-100" : ""}`}
                   >
-                    <SettingsIcon 
-                        sx={{ fontSize: 18 }} 
-                        className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-90' : ''}`}
+                    <SettingsIcon
+                      sx={{ fontSize: 18 }}
+                      className={`transition-transform duration-300 ${isDropdownOpen ? "rotate-90" : ""}`}
                     />
                     <span className="text-sm">Options</span>
                   </Button>
 
                   {isDropdownOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl shadow-indigo-900/10 border border-neutral-200 py-1.5 z-50 origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
-                      <div className="px-3 py-2 border-b border-neutral-100 mb-1">
+                    <div className="absolute top-full right-0 mt-2 w-56 bg-gray-200 rounded-xl shadow-xl shadow-gray-300/70 border border-gray-300 py-1.5 z-500 origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
+                      <div className="px-2 py-2 border-b border-neutral-100 mb-1">
                         <div className="text-xs font-semibold text-neutral-400 mb-1 uppercase tracking-wider">
                           Plan
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-neutral-700 font-medium bg-amber-50 px-2 py-1.5 rounded-lg border border-amber-100">
+                        <div className="flex items-center gap-2 text-sm text-neutral-700 font-medium bg-amber-50/60 px-2 py-1.5 rounded-lg">
                           <PremiumIcon
                             sx={{ fontSize: 16 }}
                             className="text-amber-500"
@@ -145,10 +200,10 @@ function Header() {
                           Free Tier
                         </div>
                       </div>
-                      <div className="px-1">
+                      <div className="px-2">
                         <div
                           onClick={handleLogout}
-                          className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-600 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-colors group"
+                          className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-600 hover:text-red-600 hover:bg-red-50/50 cursor-pointer transition-colors group"
                         >
                           <LogoutIcon
                             sx={{ fontSize: 18 }}

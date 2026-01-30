@@ -34,7 +34,7 @@ function Page() {
           {graphUrl ? (
             <iframe
               src={graphUrl}
-              className="w-full h-full border-none custom-scrollbar bg-white dark:bg-neutral-900"
+              className="w-full h-full border-none custom-scrollbar bg-gray-200 dark:bg-neutral-900"
               title="Project Relationship Graph"
               sandbox="allow-scripts allow-same-origin"
               style={{

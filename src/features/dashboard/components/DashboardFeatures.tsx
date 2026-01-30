@@ -42,7 +42,7 @@ const features = [
 
 export function DashboardFeatures() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in delay-100">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in delay-100">
       {features.map((feature, index) => (
         <div key={index} className="block">
           <Card className="p-2 bg-gray-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 transition-all duration-300 h-full cursor-default">

@@ -63,8 +63,8 @@ export function FileCodeView({ code, issues, fileName }: FileCodeViewProps) {
   return (
     <div className="flex h-full">
       {/* Left Panel - Code Editor */}
-      <div className="flex-1 border-r border-neutral-200 dark:border-neutral-800 flex flex-col min-w-0">
-        <div className="h-12 border-b border-neutral-200 dark:border-neutral-800 px-4 flex items-center justify-between bg-white dark:bg-neutral-950">
+      <div className="flex-1 border-r border-neutral-400 dark:border-neutral-700 flex flex-col min-w-0">
+        <div className="h-12 border-b border-neutral-400 dark:border-neutral-700 px-4 flex items-center justify-between bg-gray-200 dark:bg-neutral-900">
           <span className="text-sm text-neutral-700 dark:text-neutral-300 font-mono">{fileName}</span>
           <Badge
             variant="outline"
@@ -73,7 +73,7 @@ export function FileCodeView({ code, issues, fileName }: FileCodeViewProps) {
             {issues.length} issues
           </Badge>
         </div>
-        <ScrollArea className="flex-1 bg-neutral-50 dark:bg-neutral-950">
+        <ScrollArea className="flex-1 bg-gray-100 dark:bg-neutral-900">
           <div className="p-4 font-mono text-sm">
             {codeLines.map((line, index) => {
               const lineNumber = index + 1;
@@ -97,7 +97,7 @@ export function FileCodeView({ code, issues, fileName }: FileCodeViewProps) {
                       </div>
                     )}
                     <pre className="flex-1 overflow-x-auto">
-                      <code className="text-neutral-800 dark:text-neutral-300">{line}</code>
+                      <code className="text-neutral-900 dark:text-neutral-200">{line}</code>
                     </pre>
                   </div>
                 </div>
@@ -108,8 +108,8 @@ export function FileCodeView({ code, issues, fileName }: FileCodeViewProps) {
       </div>
 
       {/* Right Panel - Issue Details */}
-      <div className="w-[420px] bg-white dark:bg-neutral-950 flex flex-col flex-shrink-0 border-l border-neutral-200 dark:border-neutral-800">
-        <div className="h-12 border-b border-neutral-200 dark:border-neutral-800 px-4 flex items-center bg-white dark:bg-neutral-950">
+      <div className="w-[420px] bg-gray-50 dark:bg-neutral-900 flex flex-col flex-shrink-0 border-l border-neutral-300 dark:border-neutral-700">
+        <div className="h-12 border-b border-neutral-300 dark:border-neutral-700 px-4 flex items-center bg-gray-100 dark:bg-neutral-900">
           <span className="text-sm text-neutral-900 dark:text-neutral-300">Issue Details</span>
         </div>
         <ScrollArea className="flex-1">
@@ -119,7 +119,7 @@ export function FileCodeView({ code, issues, fileName }: FileCodeViewProps) {
                 key={issue.id}
                 className={`${getIssueBgColor(
                   issue.severity
-                )} border-l-4 border-t-0 border-r-0 border-b-0 rounded-l-none`}
+                )} border-l-4 border-t-0 border-r-0 border-b-0 rounded-l-none bg-white dark:bg-neutral-800 shadow-sm`}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">

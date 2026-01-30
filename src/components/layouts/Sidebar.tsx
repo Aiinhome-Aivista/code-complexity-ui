@@ -8,6 +8,7 @@ import {
   Folder,
   FilterList,
 } from "@mui/icons-material";
+import { Skeleton } from "@mui/material";
 import { Checkbox } from "../ui/Checkbox";
 import { Label } from "../ui/Label";
 import { filterTree } from "@/lib/utils";
@@ -47,7 +48,7 @@ export default function Sidebar() {
 
     const transformNode = (node: any): FileNode => {
       const children = node.children?.map(transformNode);
-      
+
       if (children) {
         children.sort(sortNodes);
       }
@@ -83,6 +84,13 @@ export default function Sidebar() {
     unvalidatedInputs: false,
     largeFiles: false,
   });
+
+  const filterOptions = [
+    { id: "high-risk", key: "highRiskOnly", label: "High risk only" },
+    { id: "public-endpoints", key: "publicEndpoints", label: "Public endpoints" },
+    { id: "unvalidated", key: "unvalidatedInputs", label: "Unvalidated inputs" },
+    { id: "large-files", key: "largeFiles", label: "Large files (>500 lines)" },
+  ];
 
   const filteredFileTree = useMemo(() => {
     return filterTree(fileTree, filters);
@@ -192,74 +200,28 @@ export default function Sidebar() {
         {/* Filter Options (Hidden when collapsed) */}
         {isFiltersExpanded && (
           <div className="px-4 pb-4 space-y-2 pl-9 border border-transparent">
-            {/* Filter inputs ... same structure, removed checks for simplicity in this snippet if not changing logic */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="high-risk"
-                checked={filters.highRiskOnly}
-                onCheckedChange={(checked) =>
-                  setFilters({ ...filters, highRiskOnly: checked as boolean })
-                }
-              />
-              <Label
-                htmlFor="high-risk"
-                className="text-xs text-neutral-500 cursor-pointer"
-              >
-                High risk only
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="public-endpoints"
-                checked={filters.publicEndpoints}
-                onCheckedChange={(checked) =>
-                  setFilters({
-                    ...filters,
-                    publicEndpoints: checked as boolean,
-                  })
-                }
-              />
-              <Label
-                htmlFor="public-endpoints"
-                className="text-xs text-neutral-500 cursor-pointer"
-              >
-                Public endpoints
-              </Label>
-            </div>
-            {/* ... other filters ... */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="unvalidated"
-                checked={filters.unvalidatedInputs}
-                onCheckedChange={(checked) =>
-                  setFilters({
-                    ...filters,
-                    unvalidatedInputs: checked as boolean,
-                  })
-                }
-              />
-              <Label
-                htmlFor="unvalidated"
-                className="text-xs text-neutral-500 cursor-pointer"
-              >
-                Unvalidated inputs
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="large-files"
-                checked={filters.largeFiles}
-                onCheckedChange={(checked) =>
-                  setFilters({ ...filters, largeFiles: checked as boolean })
-                }
-              />
-              <Label
-                htmlFor="large-files"
-                className="text-xs text-neutral-500 cursor-pointer"
-              >
-                Large files (&gt;500 lines)
-              </Label>
-            </div>
+            {filterOptions.map((option) => (
+              <div key={option.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={option.id}
+                  checked={filters[option.key as keyof typeof filters]}
+                  onCheckedChange={(checked) =>
+                    setFilters({ ...filters, [option.key]: checked as boolean })
+                  }
+                  className={`${
+                    filters[option.key as keyof typeof filters]
+                      ? "bg-indigo-500 border-indigo-500"
+                      : "bg-gray-200"
+                  }`}
+                />
+                <Label
+                  htmlFor={option.id}
+                  className="text-xs text-neutral-500 cursor-pointer"
+                >
+                  {option.label}
+                </Label>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -273,7 +235,40 @@ export default function Sidebar() {
       {/* File Tree */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="py-2">
-          {filteredFileTree?.map((node) => renderFileNode(node))}
+          {!fileNodeData ? (
+            <div className="px-4 space-y-3">
+              <div className="flex items-center gap-2 py-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                </span>
+                <span className="text-xs font-medium text-indigo-600 animate-pulse">
+                  Analyzing project structure...
+                </span>
+              </div>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton
+                    variant="rectangular"
+                    width={16}
+                    height={16}
+                    sx={{ bgcolor: "grey.300", borderRadius: 0.5 }}
+                  />
+                  <Skeleton
+                    variant="text"
+                    width="70%"
+                    sx={{ bgcolor: "grey.300" }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : filteredFileTree.length === 0 ? (
+            <div className="px-4 py-8 text-center text-neutral-400 text-sm">
+              No files found
+            </div>
+          ) : (
+            filteredFileTree?.map((node) => renderFileNode(node))
+          )}
         </div>
       </div>
     </div>

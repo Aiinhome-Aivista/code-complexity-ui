@@ -6,7 +6,7 @@ import { ArrowForward } from "@mui/icons-material";
 
 export function DashboardHero() {
   return (
-    <div className="relative flex justify-center text-center overflow-hidden rounded-2xl  p-2 mb-8 text-gray-800 animate-fade-in">
+    <div className="relative flex justify-start text-start overflow-hidden rounded-2xl  px-6 mb-8 text-gray-800 animate-fade-in">
       <div className="relative z-10">
         <h1 className="text-6xl font-bold tracking-tight  mb-2">
           Intelligent Code Analysis Tool
@@ -16,7 +16,7 @@ export function DashboardHero() {
           security vulnerabilities, and potential optimizations with our
           advanced heatmap engine.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-start gap-4">
           <Link href="?analysis=agentic" scroll={false}>
             <Button
               variant="outline"
