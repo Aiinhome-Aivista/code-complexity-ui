@@ -25,7 +25,7 @@ export const navItems: NavItem[] = [
     href: "/heatmap",
     icon: "Analytics",
   },
-   {
+  {
     title: "Code View",
     href: "/code-view",
     icon: "Code",
@@ -50,7 +50,7 @@ export const navItems: NavItem[] = [
     href: "/visualization",
     icon: "ViewQuilt",
   },
-  /*   {
+ /*  {
     title: "Flow",
     href: "/flow",
     icon: "AccountTree",

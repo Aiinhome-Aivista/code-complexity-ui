@@ -20,16 +20,7 @@ import {
   Chip,
   Box,
   Typography,
-  MenuItem,
-  Select,
-  FormControl,
-  SelectChangeEvent,
   Skeleton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   Snackbar,
   Alert,
 } from "@mui/material";
@@ -98,16 +89,20 @@ export function RecentSessionsTable({
 }: {
   refreshTrigger?: number;
 }) {
-  const [sessions, setSessions] = useState<SessionDataTableItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+
   // Delete & Toast State
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | string | null>(null);
-  const [toast, setToast] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+  const [confirmSnackbarOpen, setConfirmSnackbarOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | string | null>(
+    null,
+  );
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
 
   const router = useRouter();
   const {
@@ -115,6 +110,11 @@ export function RecentSessionsTable({
     setHeatmapData,
     setFileNodeData,
     setActiveProjectName,
+    sessions,
+    setSessions,
+    isSessionsLoading,
+    setIsSessionsLoading,
+    setFlowData,
   } = useUIStore();
   const { user } = useAuthStore();
 
@@ -174,28 +174,42 @@ export function RecentSessionsTable({
         }
       }
     } catch (error) {
-       console.error("Error fetching project results:", error);
+      console.error("Error fetching project results:", error);
     }
   };
 
   const handleDeleteClick = (id: number | string, e: React.MouseEvent) => {
     e.stopPropagation();
     setDeleteTargetId(id);
-    setDeleteDialogOpen(true);
+    setConfirmSnackbarOpen(true);
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmSnackbarOpen(false);
+    setDeleteTargetId(null);
   };
 
   const activeDelete = async () => {
     if (!deleteTargetId) return;
-    
+    const targetId = deleteTargetId;
+    setConfirmSnackbarOpen(false);
+
     try {
-      await commonService.deleteProject(deleteTargetId);
-      setToast({ open: true, message: "Session deleted successfully", severity: "success" });
+      await commonService.deleteProject(targetId);
+      setToast({
+        open: true,
+        message: "Session deleted successfully",
+        severity: "success",
+      });
       if (user) fetchSessions();
     } catch (error) {
-       console.error("Error deleting session:", error);
-       setToast({ open: true, message: "Failed to delete session", severity: "error" });
+      console.error("Error deleting session:", error);
+      setToast({
+        open: true,
+        message: "Failed to delete session",
+        severity: "error",
+      });
     } finally {
-      setDeleteDialogOpen(false);
       setDeleteTargetId(null);
     }
   };
@@ -208,7 +222,7 @@ export function RecentSessionsTable({
     if (!user) return; // Wait for user to be loaded
 
     try {
-      setLoading(true);
+      setIsSessionsLoading(true);
       const response = await commonService.getSessionDataTable(
         user.id.toString(),
         search,
@@ -220,7 +234,7 @@ export function RecentSessionsTable({
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
     } finally {
-      setLoading(false);
+      setIsSessionsLoading(false);
     }
   };
 
@@ -278,9 +292,9 @@ export function RecentSessionsTable({
         <IconButton
           sx={{ color: "var(--text-secondary)" }}
           onClick={handleRefresh}
-          disabled={loading}
+          disabled={isSessionsLoading}
         >
-          <Refresh className={loading ? "animate-spin" : ""} />
+          <Refresh className={isSessionsLoading ? "animate-spin" : ""} />
         </IconButton>
       </Box>
 
@@ -354,6 +368,9 @@ export function RecentSessionsTable({
             border: 1,
             borderColor: "rgb(156 163 175)", // gray-400
             borderRadius: 2,
+            width: "99%", // Prevent horizontal scroll on hover scale
+            mx: "auto",
+            overflowX: "hidden", // Hide potential overflow
           }}
         >
           <Table sx={{ minWidth: 900 }}>
@@ -377,12 +394,12 @@ export function RecentSessionsTable({
                 <TableCell align="center">Visualization</TableCell>
                 <TableCell align="center">Heatmap</TableCell>
                 <TableCell align="center">Code Health</TableCell>
-                <TableCell align="right">Relationship Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell align="center">Relationship Status</TableCell>
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading ? (
+              {isSessionsLoading ? (
                 Array.from(new Array(5)).map((_, index) => (
                   <TableRow key={index} sx={{ height: "45px" }}>
                     <TableCell>
@@ -423,7 +440,7 @@ export function RecentSessionsTable({
                         height={24}
                       />
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="center">
                       <Skeleton
                         animation="wave"
                         variant="rounded"
@@ -431,7 +448,7 @@ export function RecentSessionsTable({
                         height={24}
                       />
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="center">
                       <Skeleton animation="wave" width={40} />
                     </TableCell>
                   </TableRow>
@@ -442,10 +459,17 @@ export function RecentSessionsTable({
                     key={session.id}
                     sx={{
                       height: "45px", // Explicit height match
-                      bgcolor: "rgb(229 231 235)", // gray-200
+                      bgcolor: "rgb(243, 244, 246)", // gray-200
                       cursor: "pointer",
-                      "&:hover": { bgcolor: "rgb(209 213 219) !important" }, // gray-300
-                      transition: "background-color 0.2s",
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        bgcolor: "rgb(243, 244, 246) !important", // gray-300
+                        transform: "scale(1.01)",
+                        zIndex: 1,
+                        position: "relative",
+                        boxShadow:
+                          "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                      },
                       borderBottom: "1px solid rgb(209 213 219)", // gray-300
                       "&:last-child td, &:last-child th": { border: 0 },
                       "& td": {
@@ -495,10 +519,10 @@ export function RecentSessionsTable({
                     </TableCell>
                     <TableCell align="center">
                       <Chip
-                        label={session.relationship_status || "N/A"}
+                        label={session.visualization_status || "N/A"}
                         size="small"
                         sx={{
-                          ...getStatusChipColor(session.relationship_status),
+                          ...getStatusChipColor(session.visualization_status),
                           fontWeight: 500,
                         }}
                       />
@@ -523,23 +547,23 @@ export function RecentSessionsTable({
                         }}
                       />
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="center">
                       <Chip
-                        label={session.visualization_status || "N/A"}
+                        label={session.relationship_status || "N/A"}
                         size="small"
                         sx={{
                           ...getStatusChipColor(
-                            session.visualization_status || "N/A",
+                            session.relationship_status || "N/A",
                           ),
                           fontWeight: 500,
                         }}
                       />
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="center">
                       <Box
                         sx={{
                           display: "flex",
-                          justifyContent: "flex-end",
+                          justifyContent: "center",
                           gap: 0.5,
                         }}
                       >
@@ -622,10 +646,10 @@ export function RecentSessionsTable({
             borderColor: "rgb(156 163 175)", // gray-400
             color: "var(--text-secondary)",
             "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
-              {
-                fontSize: "0.9rem",
-                color: "var(--text-secondary)",
-              },
+            {
+              fontSize: "0.9rem",
+              color: "var(--text-secondary)",
+            },
             "& .MuiTablePagination-select": {
               color: "var(--text-primary)",
             },
@@ -639,49 +663,55 @@ export function RecentSessionsTable({
         />
       </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        PaperProps={{
-          style: {
-            borderRadius: 12,
-            padding: "8px",
-            minWidth: "320px",
-          },
-        }}
+      {/* Delete Confirmation Snackbar */}
+      <Snackbar
+        open={confirmSnackbarOpen}
+        onClose={handleCancelDelete}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <DialogTitle sx={{ fontWeight: 600, color: "var(--text-primary)" }}>
-          Delete Session?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ color: "var(--text-secondary)" }}>
-            Are you sure you want to delete this analysis session? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ padding: 2 }}>
-          <Button 
-            onClick={() => setDeleteDialogOpen(false)}
-            variant="ghost"
-            className="text-neutral-600 hover:bg-neutral-100"
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={activeDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Alert
+          severity="warning"
+          variant="filled"
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+            alignItems: "center",
+            "& .MuiAlert-message": {
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+            },
+          }}
+          action={
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCancelDelete}
+                className="text-white hover:bg-white/20"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={activeDelete}
+                className="bg-red-700 hover:bg-red-800 text-white border-0"
+              >
+                Delete
+              </Button>
+            </Box>
+          }
+        >
+          Are you sure you want to delete this session?
+        </Alert>
+      </Snackbar>
 
       {/* Toast Notification */}
       <Snackbar
         open={toast.open}
         autoHideDuration={4000}
         onClose={handleCloseToast}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseToast}

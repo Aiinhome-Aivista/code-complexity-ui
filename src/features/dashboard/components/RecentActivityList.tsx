@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { commonService } from "@/services/common_apiservice";
 import { useAuthStore } from "@/store/authStore";
+import { useUIStore } from "@/store/uiStore";
 import type { SessionDataTableItem } from "@/types/common_api_types";
 import { Skeleton } from "@mui/material";
 import {
@@ -14,34 +15,10 @@ import { Button } from "@/components/ui/Button";
 
 export const RecentActivityList = () => {
   const { user } = useAuthStore();
-  const [activities, setActivities] = useState<SessionDataTableItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { sessions, isSessionsLoading } = useUIStore();
 
-  useEffect(() => {
-    const fetchRecentActivity = async () => {
-      if (!user) return;
-      try {
-        setLoading(true);
-        // Fetch sessions, we'll take top 5
-        const response = await commonService.getSessionDataTable(
-          user.id.toString(),
-          "",
-          "",
-        );
-        if (response?.isSuccess) {
-          setActivities(response.data.slice(0, 5));
-        }
-      } catch (error) {
-        console.error("Failed to fetch recent activity:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchRecentActivity();
-    }
-  }, [user]);
+  const activities = sessions.slice(0, 5);
+  const loading = isSessionsLoading;
 
   const handleViewAll = () => {
     const tableElement = document.getElementById("recent-sessions-table");
@@ -74,7 +51,7 @@ export const RecentActivityList = () => {
       </div>
 
       {loading ? (
-        <div className="divide-y divide-gray-500/20">
+        <div className="divide-y divide-gray-500/60">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-start gap-3 py-3">
               <Skeleton variant="circular" width={32} height={32} />
@@ -86,7 +63,7 @@ export const RecentActivityList = () => {
           ))}
         </div>
       ) : activities.length > 0 ? (
-        <div className="divide-y divide-gray-400/40">
+        <div className="divide-y divide-gray-400/70">
           {activities.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-3 group">
               <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-indigo-600 shrink-0 border border-gray-400/70">
@@ -107,7 +84,7 @@ export const RecentActivityList = () => {
                   </span>
                   <span className="text-[10px] text-neutral-300">•</span>
                   <span className="text-[10px] text-neutral-500 truncate">
-                    {item.files_analyzed} files
+                    {/* {item.files_analyzed} */} file's
                   </span>
                 </div>
               </div>

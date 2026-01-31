@@ -35,7 +35,7 @@ export function FileCodeView({
   onIgnore,
   onCopy,
 }: FileCodeViewProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const codeLines = code.split("\n");
 
   const getIssueIcon = (type: Issue["type"]) => {
@@ -291,7 +291,7 @@ export default function CodeViewPage() {
   const fileNodeData = useUIStore((state) => state.fileNodeData);
   const selectedFileNode = useUIStore((state) => state.selectedFileNode);
   const setSelectedFileNode = useUIStore((state) => state.setSelectedFileNode);
-  
+
   const searchParams = useSearchParams();
   const fileParam = searchParams.get("file");
 
@@ -302,7 +302,7 @@ export default function CodeViewPage() {
         // Deep search for node
         const findNode = (nodes: any[]): any => {
           for (const node of nodes) {
-            if (node.name === fileParam && node.type === 'file') return node;
+            if (node.name === fileParam && node.type === "file") return node;
             if (node.children) {
               const found = findNode(node.children);
               if (found) return found;
@@ -310,7 +310,7 @@ export default function CodeViewPage() {
           }
           return null;
         };
-        
+
         const targetNode = findNode(fileNodeData.data.FileNode);
         if (targetNode) {
           setSelectedFileNode(targetNode);
@@ -402,45 +402,73 @@ export default function CodeViewPage() {
   if (!fileNodeData) {
     return (
       <div className="h-full flex items-center justify-center flex-col gap-4 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
-         <div className="flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
-            </span>
-            <span className="text-lg font-medium text-indigo-600 animate-pulse">
-              Analyzing project...
-            </span>
-         </div>
-         <div className="space-y-2 w-64">
-            <Skeleton variant="text" sx={{ bgcolor: "grey.300", fontSize: '1rem' }} />
-            <Skeleton variant="text" sx={{ bgcolor: "grey.300", fontSize: '0.8rem' }} />
-         </div>
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+          </span>
+          <span className="text-lg font-medium text-indigo-600 animate-pulse">
+            Analyzing project...
+          </span>
+        </div>
+        <div className="space-y-2 w-64">
+          <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "1rem" }}
+          />
+          <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "0.8rem" }}
+          />
+        </div>
       </div>
     );
   }
 
   // Empty Data State
   if (!fileNodeData.data?.FileNode || fileNodeData.data.FileNode.length === 0) {
-     return (
-       <div className="h-full flex items-center justify-center text-neutral-400 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
-         <div className="text-center space-y-2">
-           <AlertTriangle sx={{ fontSize: 48, opacity: 0.2 }} />
-           <p>No analysable files found in this project</p>
-         </div>
-       </div>
-     );
+    return (
+      <div className="h-full flex items-center justify-center p-6 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-l border-neutral-200 dark:border-neutral-800">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm ring-8 ring-orange-50/50 dark:ring-orange-900/20">
+            <AlertTriangle
+              sx={{ fontSize: 40 }}
+              className="text-orange-500 dark:text-orange-400"
+            />
+          </div>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+            No Analysable Files Found
+          </h3>
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed">
+            We couldn't find any supported files to analyze in this project.
+            Please check your file extensions or selection.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Not Selected State
   if (!selectedFileNode) {
-     return (
-       <div className="h-full flex items-center justify-center text-neutral-400 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
-         <div className="text-center space-y-2">
-           <Copy sx={{ fontSize: 48, opacity: 0.2 }} />
-           <p>Select a file from the sidebar to view code issues</p>
-         </div>
-       </div>
-     );
+    return (
+      <div className="h-full flex items-center justify-center p-6 bg-gradient-to-br from-indigo-50/80 to-purple-50/80 dark:from-indigo-950/20 dark:to-purple-950/20 border-l border-neutral-200 dark:border-neutral-800">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm ring-8 ring-indigo-50/50 dark:ring-indigo-900/20">
+            <Copy
+              sx={{ fontSize: 36 }}
+              className="text-indigo-600 dark:text-indigo-400"
+            />
+          </div>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+            Select a File to Analyze
+          </h3>
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed">
+            Choose a file from the sidebar to view detailed code issues,
+            complexity metrics, and AI-powered insights.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -12,5 +12,6 @@ export const API_ENDPOINTS = {
     HEATMAP: `${BASE_URL}api/code_heatmap`,
     FILENODE: `${BASE_URL}api/analyze_project_ai`,
     DELETE: `${BASE_URL}api/projects/delete`,
+    FLOW: `${BASE_URL}api/relationships_flow`,
   },
 } as const;

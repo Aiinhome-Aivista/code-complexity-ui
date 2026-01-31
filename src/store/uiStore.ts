@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { fileTree as initialFileTree } from '@/data/mockData';
+import type { SessionDataTableItem } from "@/types/common_api_types";
 
 interface UIState {
   isUserMenuOpen: boolean;
@@ -19,6 +20,12 @@ interface UIState {
   setFileTree: (tree: any[]) => void;
   activeProjectName: string | null;
   setActiveProjectName: (name: string | null) => void;
+  sessions: SessionDataTableItem[];
+  setSessions: (sessions: SessionDataTableItem[]) => void;
+  isSessionsLoading: boolean;
+  setIsSessionsLoading: (loading: boolean) => void;
+  flowData: any | null;
+  setFlowData: (data: any) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -40,6 +47,12 @@ export const useUIStore = create<UIState>()(
       setFileTree: (tree) => set({ fileTree: tree }),
       activeProjectName: null,
       setActiveProjectName: (name) => set({ activeProjectName: name }),
+      sessions: [],
+      setSessions: (sessions) => set({ sessions }),
+      isSessionsLoading: false,
+      setIsSessionsLoading: (loading) => set({ isSessionsLoading: loading }),
+      flowData: null,
+      setFlowData: (data) => set({ flowData: data }),
     }),
     {
       name: 'code-heatmap-storage-v1',
