@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Issue, codeExample, issuesForFile } from "@/data/mockData";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { useUIStore } from "@/store/uiStore";
-import { Snackbar, Alert, Skeleton } from "@mui/material";
+import { Snackbar, Alert, Skeleton, Tooltip } from "@mui/material";
 
 interface FileCodeViewProps {
   code: string;
@@ -87,7 +87,8 @@ export function FileCodeView({
           </span>
           <Badge
             variant="outline"
-            className="text-xs bg-gray-100 border-neutral-200 text-neutral-600"
+            className="text-xs bg-gray-100 border-neutral-200 text-neutral-600 cursor-pointer hover:bg-gray-200 transition-colors"
+            onClick={() => setIsCollapsed(false)}
           >
             {issues.length} issues
           </Badge>
@@ -102,9 +103,8 @@ export function FileCodeView({
               return (
                 <div
                   key={lineNumber}
-                  className={`flex gap-4 ${
-                    hasIssue ? "bg-red-50/50" : ""
-                  } hover:bg-neutral-100 dark:hover:bg-neutral-900/50`}
+                  className={`flex gap-4 ${hasIssue ? "bg-red-50/50" : ""
+                    } hover:bg-neutral-100 dark:hover:bg-neutral-900/50`}
                 >
                   <div className="w-12 text-right text-neutral-400 dark:text-neutral-600 select-none flex-shrink-0">
                     {lineNumber}
@@ -130,9 +130,8 @@ export function FileCodeView({
 
       {/* Right Panel - Issue Details */}
       <div
-        className={`bg-gray-200 dark:bg-neutral-900 flex flex-col flex-shrink-0 border-l border-neutral-300 dark:border-neutral-700 transition-all duration-300 ease-in-out ${
-          isCollapsed ? "w-[50px]" : "w-[420px]"
-        }`}
+        className={`bg-gray-200 dark:bg-neutral-900 flex flex-col flex-shrink-0 border-l border-neutral-300 dark:border-neutral-700 transition-all duration-300 ease-in-out ${isCollapsed ? "w-[50px]" : "w-[420px]"
+          }`}
       >
         <div className="h-12 border-b border-neutral-300 dark:border-neutral-700 px-2 flex items-center justify-between bg-gray-200 dark:bg-neutral-900 overflow-hidden">
           {!isCollapsed && (
@@ -140,14 +139,16 @@ export function FileCodeView({
               Issue Details
             </span>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 hover:bg-gray-400/20"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            {isCollapsed ? <ChevronLeft /> : <ChevronRight />}
-          </Button>
+          <Tooltip title={isCollapsed ? "Open Issue Details" : "Close Issue Details"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-gray-400/20"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+            </Button>
+          </Tooltip>
         </div>
         <ScrollArea className={`flex-1 ${isCollapsed ? "hidden" : "block"}`}>
           <div className="p-4 space-y-4">
@@ -173,11 +174,10 @@ export function FileCodeView({
                                 ? "destructive"
                                 : "secondary"
                             }
-                            className={`text-[10px] h-5 px-1.5 ${
-                              issue.severity === "safe"
-                                ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                : ""
-                            }`}
+                            className={`text-[10px] h-5 px-1.5 ${issue.severity === "safe"
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : ""
+                              }`}
                           >
                             {issue.severity}
                           </Badge>
@@ -333,8 +333,8 @@ export default function CodeViewPage() {
   });
 
   useEffect(() => {
-    console.log("CodeView File Node Data:", fileNodeData);
-    console.log("Selected File Node:", selectedFileNode);
+    /* console.log("CodeView File Node Data:", fileNodeData);
+    console.log("Selected File Node:", selectedFileNode); */
 
     if (selectedFileNode && selectedFileNode.found_at) {
       setLoading(true);
@@ -356,7 +356,7 @@ export default function CodeViewPage() {
             type: (apiIssue.type?.toLowerCase() as any) || "complexity",
             severity:
               apiIssue.severity?.toLowerCase() === "high" ||
-              apiIssue.severity?.toLowerCase() === "critical"
+                apiIssue.severity?.toLowerCase() === "critical"
                 ? "high"
                 : apiIssue.severity?.toLowerCase() === "medium"
                   ? "moderate"
@@ -485,6 +485,9 @@ export default function CodeViewPage() {
         autoHideDuration={2000}
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{
+          zIndex: 10,
+        }}
       >
         <Alert
           onClose={handleCloseToast}

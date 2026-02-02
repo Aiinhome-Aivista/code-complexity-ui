@@ -20,10 +20,6 @@ interface UIState {
   setFileTree: (tree: any[]) => void;
   activeProjectName: string | null;
   setActiveProjectName: (name: string | null) => void;
-  sessions: SessionDataTableItem[];
-  setSessions: (sessions: SessionDataTableItem[]) => void;
-  isSessionsLoading: boolean;
-  setIsSessionsLoading: (loading: boolean) => void;
   flowData: any | null;
   setFlowData: (data: any) => void;
 }
@@ -47,10 +43,6 @@ export const useUIStore = create<UIState>()(
       setFileTree: (tree) => set({ fileTree: tree }),
       activeProjectName: null,
       setActiveProjectName: (name) => set({ activeProjectName: name }),
-      sessions: [],
-      setSessions: (sessions) => set({ sessions }),
-      isSessionsLoading: false,
-      setIsSessionsLoading: (loading) => set({ isSessionsLoading: loading }),
       flowData: null,
       setFlowData: (data) => set({ flowData: data }),
     }),

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { FlowNode, flowNodes } from "@/data/flowData";
+import { useUIStore } from "@/store/uiStore";
 import {
   Storage as Database,
   Description as FileCode,
@@ -13,6 +13,17 @@ import {
   Search,
 } from "@mui/icons-material";
 import { Input } from "@/components/ui/Input";
+
+export interface FlowNode {
+  id: string;
+  name: string;
+  type: "file" | "folder" | "table";
+  category: "component" | "api" | "util" | "model" | "config";
+  fields?: Array<{ name: string; type: string }>;
+  dependencies?: string[]; // IDs of nodes this depends on
+  x: number;
+  y: number;
+}
 
 interface FlowViewProps {
   nodes: FlowNode[];
@@ -60,6 +71,14 @@ export function FlowView({ nodes }: FlowViewProps) {
           border: "border-orange-200 dark:border-orange-700",
           text: "text-orange-600 dark:text-orange-400",
           accent: "bg-orange-600",
+        };
+      default:
+        // Fallback for unknown categories
+        return {
+          bg: "bg-gray-50 dark:bg-gray-900/20",
+          border: "border-gray-200 dark:border-gray-700",
+          text: "text-gray-600 dark:text-gray-400",
+          accent: "bg-gray-600",
         };
     }
   };
@@ -195,6 +214,7 @@ export function FlowView({ nodes }: FlowViewProps) {
               if (!node.dependencies) return null;
               return node.dependencies.map((depId) => {
                 const depNode = nodes.find((n) => n.id === depId);
+                // IF depNode is not found, skip (can happen if API returns broken ref)
                 if (!depNode) return null;
 
                 const isHighlighted =
@@ -400,5 +420,22 @@ export function FlowView({ nodes }: FlowViewProps) {
 }
 
 export default function FlowPage() {
-  return <FlowView nodes={flowNodes} />;
+  const { flowData } = useUIStore();
+  const [nodes, setNodes] = useState<FlowNode[]>([]);
+
+  useEffect(() => {
+    if (flowData && flowData.data && Array.isArray(flowData.data)) {
+      setNodes(flowData.data);
+    }
+  }, [flowData]);
+
+  if (!nodes || nodes.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-500">
+        No flow data available. Use the Analysis Wizard to generate a flow.
+      </div>
+    );
+  }
+
+  return <FlowView nodes={nodes} />;
 }

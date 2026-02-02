@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { commonService } from "@/services/common_apiservice";
 import { useUIStore } from "@/store/uiStore";
+import { useSessionStore } from "@/store/sessionStore";
 import type { SessionDataTableItem } from "@/types/common_api_types";
 import {
   Table,
@@ -110,12 +111,14 @@ export function RecentSessionsTable({
     setHeatmapData,
     setFileNodeData,
     setActiveProjectName,
+    setFlowData,
+  } = useUIStore();
+  const {
     sessions,
     setSessions,
     isSessionsLoading,
     setIsSessionsLoading,
-    setFlowData,
-  } = useUIStore();
+  } = useSessionStore();
   const { user } = useAuthStore();
 
   const handleViewResults = async (id: number | string) => {
@@ -165,6 +168,23 @@ export function RecentSessionsTable({
             })
             .catch((err) => {
               console.error("Error fetching file node data:", err);
+            });
+
+          // Flow Data Call
+          const flowPayload = {
+            project_id: selectedSession.id,
+            session_id: selectedSession.session_id,
+          };
+
+          commonService
+            .getFlowData(flowPayload)
+            .then((flowResponse) => {
+              if (flowResponse) {
+                setFlowData(flowResponse);
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching flow data:", err);
             });
         } else {
           console.warn(
@@ -230,9 +250,25 @@ export function RecentSessionsTable({
       );
       if (response?.isSuccess) {
         setSessions(response.data);
+        setToast({
+          open: true,
+          message: "Sessions refreshed successfully",
+          severity: "success",
+        });
+      } else {
+        setToast({
+          open: true,
+          message: "Failed to fetch sessions",
+          severity: "error",
+        });
       }
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
+      setToast({
+        open: true,
+        message: "Network error: Failed to fetch sessions",
+        severity: "error",
+      });
     } finally {
       setIsSessionsLoading(false);
     }

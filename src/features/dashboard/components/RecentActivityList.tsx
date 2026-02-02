@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { commonService } from "@/services/common_apiservice";
 import { useAuthStore } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
+import { useSessionStore } from "@/store/sessionStore";
 import type { SessionDataTableItem } from "@/types/common_api_types";
 import { Skeleton } from "@mui/material";
 import {
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/Button";
 
 export const RecentActivityList = () => {
   const { user } = useAuthStore();
-  const { sessions, isSessionsLoading } = useUIStore();
+  const { sessions, isSessionsLoading } = useSessionStore();
 
   const activities = sessions.slice(0, 5);
   const loading = isSessionsLoading;

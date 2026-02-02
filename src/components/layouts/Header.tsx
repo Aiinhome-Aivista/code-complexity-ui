@@ -11,28 +11,48 @@ import {
   Settings as SettingsIcon,
   KeyboardArrowRight,
 } from "@mui/icons-material";
+import { Snackbar, Alert, Box } from "@mui/material"; // Added Snackar, Alert, Box
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
 
+import { createPortal } from "react-dom";
+
 function Header() {
   const { isAuthenticated, user, logout } = useAuthStore();
-  const { activeProjectName, setActiveProjectName } = useUIStore();
+  const {
+    activeProjectName,
+    setActiveProjectName,
+    setProjectResults,
+    setHeatmapData,
+    setFileNodeData,
+    setFlowData,
+  } = useUIStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false); // New state for logout confirm
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === "/" || pathname === "/home";
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isAuthPage = pathname === "/login" || pathname === "/register";
   const logoLink = isAuthenticated ? "/dashboard" : "/home";
 
-  // Clear active project name when returning to dashboard
+  // Clear active project name and analysis data when returning to dashboard
   useEffect(() => {
     if (pathname === "/dashboard") {
       setActiveProjectName(null);
+      setProjectResults(null);
+      setHeatmapData(null);
+      setFileNodeData(null);
+      setFlowData(null);
     }
-  }, [pathname, setActiveProjectName]);
+  }, [pathname, setActiveProjectName, setProjectResults, setHeatmapData, setFileNodeData, setFlowData]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -49,7 +69,16 @@ function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isDropdownOpen]);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setLogoutConfirmOpen(true);
+    setIsDropdownOpen(false); // Close dropdown
+  };
+
+  const handleCancelLogout = () => {
+    setLogoutConfirmOpen(false);
+  };
+
+  const performLogout = () => {
     localStorage.removeItem("userdata");
     localStorage.removeItem("token");
     localStorage.clear();
@@ -57,11 +86,11 @@ function Header() {
       "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     logout();
     router.push("/");
+    setLogoutConfirmOpen(false);
   };
 
   return (
-    <>
-      <div className="h-full border-b border-neutral-200 flex justify-between items-center px-4 bg-gray-200 backdrop-blur-sm transition-colors duration-300">
+      <div className="h-full border-b border-neutral-200 flex justify-between items-center px-4 bg-gray-200 backdrop-blur-sm transition-colors duration-300 z-500">
         <div className="flex text-neutral-900 gap-8 items-center">
           <div className="flex gap-2 items-center">
             <Link
@@ -223,34 +252,40 @@ function Header() {
                     <span className="text-sm">Options</span>
                   </Button>
 
-                  {isDropdownOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-gray-200 rounded-xl shadow-xl shadow-gray-300/70 border border-gray-300 py-1.5 z-500 origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
-                      <div className="px-2 py-2 border-b border-neutral-100 mb-1">
-                        <div className="text-xs font-semibold text-neutral-400 mb-1 uppercase tracking-wider">
-                          Plan
+                  {isDropdownOpen &&
+                    mounted &&
+                    createPortal(
+                      <div
+                        ref={dropdownRef}
+                        className="fixed top-16 right-4 w-56 bg-gray-200 rounded-xl shadow-xl shadow-gray-300/70 border border-gray-300 py-1.5 z-[9999] origin-top-right animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200"
+                      >
+                        <div className="px-2 py-2 border-b border-neutral-100 mb-1">
+                          <div className="text-xs font-semibold text-neutral-400 mb-1 uppercase tracking-wider">
+                            Plan
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-neutral-700 font-medium hover:bg-amber-50/50 px-2 py-1.5 rounded-lg cursor-default">
+                            <PremiumIcon
+                              sx={{ fontSize: 16 }}
+                              className="text-amber-500"
+                            />
+                            Free Tier
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-neutral-700 font-medium hover:bg-amber-50/50 px-2 py-1.5 rounded-lg cursor-default">
-                          <PremiumIcon
-                            sx={{ fontSize: 16 }}
-                            className="text-amber-500"
-                          />
-                          Free Tier
+                        <div className="px-2">
+                          <div
+                            onClick={handleLogoutClick}
+                            className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-600 hover:text-red-600 hover:bg-red-50/40 cursor-pointer transition-colors group"
+                          >
+                            <LogoutIcon
+                              sx={{ fontSize: 18 }}
+                              className="group-hover:text-red-500 transition-colors"
+                            />
+                            Sign out
+                          </div>
                         </div>
-                      </div>
-                      <div className="px-2">
-                        <div
-                          onClick={handleLogout}
-                          className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-600 hover:text-red-600 hover:bg-red-50/40 cursor-pointer transition-colors group"
-                        >
-                          <LogoutIcon
-                            sx={{ fontSize: 18 }}
-                            className="group-hover:text-red-500 transition-colors"
-                          />
-                          Sign out
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                      </div>,
+                      document.body,
+                    )}
                 </>
               ) : (
                 <Link href="/login">
@@ -266,8 +301,50 @@ function Header() {
             </div>
           )}
         </div>
+
+        {/* Logout Confirmation Snackbar */}
+        <Snackbar
+          open={logoutConfirmOpen}
+          onClose={handleCancelLogout}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            severity="warning"
+            variant="filled"
+            sx={{
+              width: "100%",
+              borderRadius: 2,
+              alignItems: "center",
+              "& .MuiAlert-message": {
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              },
+            }}
+            action={
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleCancelLogout}
+                  className="text-white hover:bg-white/20"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={performLogout}
+                  className="bg-red-700 hover:bg-red-800 text-white border-0"
+                >
+                  Logout
+                </Button>
+              </Box>
+            }
+          >
+            Are you sure you want to sign out?
+          </Alert>
+        </Snackbar>
       </div>
-    </>
   );
 }
 
