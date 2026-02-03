@@ -38,6 +38,7 @@ export const commonService = {
   },
   deleteProject: async (id: number | string): Promise<any | null> => {
     return apiservice<any>(`${API_ENDPOINTS.POST.DELETE}/${id}`, {
+      method: "DELETE",
     });
   },
   getFlowData: async (payload: any): Promise<any | null> => {
