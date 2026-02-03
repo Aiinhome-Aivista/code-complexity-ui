@@ -45,11 +45,11 @@ export const navItems: NavItem[] = [
     href: "/report",
     icon: "Description",
   }, */
-  {
+ /*  {
     title: "Visualization",
     href: "/visualization",
     icon: "ViewQuilt",
-  },
+  }, */
   {
     title: "Flow",
     href: "/flow",
