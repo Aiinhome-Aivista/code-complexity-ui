@@ -606,8 +606,8 @@ export function RecentSessionsTable({
                         <IconButton
                           size="small"
                           sx={{
-                            color: "var(--text-secondary)",
-                            "&:hover": { color: "var(--primary-main)" },
+                            color: "var(--primary-main)",
+                            "&:hover": { color: "#3730a3" }, // darker indigo on hover
                           }}
                         >
                           <Visibility fontSize="medium" />
@@ -616,8 +616,8 @@ export function RecentSessionsTable({
                           size="small"
                           onClick={(e) => handleDeleteClick(session.id, e)}
                           sx={{
-                            color: "var(--text-secondary)",
-                            "&:hover": { color: "var(--danger-main)" },
+                            color: "var(--danger-main)",
+                            "&:hover": { color: "#dc2626" }, // darker red on hover
                           }}
                         >
                           <Delete fontSize="medium" />

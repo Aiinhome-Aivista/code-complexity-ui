@@ -1,4 +1,5 @@
-export const BASE_URL = "http://122.163.121.176:3034/";
+/* export const BASE_URL = "http://122.163.121.176:3034/"; */
+export const BASE_URL = "http://122.163.121.176:3019/";
 
 export const API_ENDPOINTS = {
   GET: {

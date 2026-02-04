@@ -162,9 +162,6 @@ export default function FlowPage() {
     <ReactFlowProvider>
       <div className="h-[calc(100vh-64px)] bg-gray-100 dark:bg-neutral-950 p-6 flex flex-col gap-6">
         <div className="shrink-0">
-          <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
-            Flow
-          </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Visual graph of file dependencies and relationships
           </p>

@@ -76,36 +76,9 @@ function HeatmapView({
     <div className="p-6 space-y-6 min-h-screen bg-gray-100 dark:bg-neutral-950">
       {/* Header Section */}
       <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
-            Code Risk Heatmap
-          </h1>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Visual representation of risk distribution across files
-          </p>
-        </div>
-
-        {/* Metric Selection Tabs */}
-        {/* <div className="flex items-center gap-3">
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
-            Metric:
-          </span>
-          <div className="flex gap-2">
-            {metrics.map((metric) => (
-              <button
-                key={metric}
-                onClick={() => onMetricChange(metric)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
-                  selectedMetric === metric
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700"
-                }`}
-              >
-                {metric}
-              </button>
-            ))}
-          </div>
-        </div> */}
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          Visual representation of risk distribution across files
+        </p>
       </div>
 
       {/* Legend Card */}
@@ -113,7 +86,7 @@ function HeatmapView({
         <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3 flex justify-between items-center">
           Risk Level Legend
           {selectedRiskFilter && (
-            <button 
+            <button
               onClick={() => setSelectedRiskFilter(null)}
               className="text-xs text-indigo-600 hover:text-indigo-700 font-medium hover:underline cursor-pointer"
             >
@@ -125,16 +98,15 @@ function HeatmapView({
           {legendItems.map((item) => {
             const isSelected = selectedRiskFilter === item.value;
             const isDimmed = selectedRiskFilter && !isSelected;
-            
+
             return (
               <button
                 key={item.label}
                 onClick={() => setSelectedRiskFilter(isSelected ? null : item.value)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer ${
-                  isSelected 
-                    ? "bg-white dark:bg-neutral-800 shadow-sm ring-1 ring-neutral-300 dark:ring-neutral-700" 
-                    : "hover:bg-gray-300/50 dark:hover:bg-neutral-800/50"
-                } ${isDimmed ? "opacity-40 grayscale" : "opacity-100"}`}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer ${isSelected
+                  ? "bg-white dark:bg-neutral-800 shadow-sm ring-1 ring-neutral-300 dark:ring-neutral-700"
+                  : "hover:bg-gray-300/50 dark:hover:bg-neutral-800/50"
+                  } ${isDimmed ? "opacity-40 grayscale" : "opacity-100"}`}
               >
                 <div className={`w-5 h-5 rounded ${item.color} shadow-sm`} />
                 <span className={`text-sm font-medium ${isSelected ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-600 dark:text-neutral-400"}`}>
@@ -158,11 +130,10 @@ function HeatmapView({
               <div key={index} className="space-y-2">
                 <div
                   onClick={() => setSelectedFile(selectedFile?.file === file.file ? null : file)}
-                  className={`space-y-1.5 p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
-                    isSelected
-                      ? "bg-white dark:bg-neutral-800 border-indigo-500 ring-1 ring-indigo-500"
-                      : "hover:bg-gray-300/50 dark:hover:bg-neutral-800 border-transparent"
-                  }`}
+                  className={`space-y-1.5 p-3 rounded-lg cursor-pointer transition-all duration-200 border ${isSelected
+                    ? "bg-white dark:bg-neutral-800 border-indigo-500 ring-1 ring-indigo-500"
+                    : "hover:bg-gray-300/50 dark:hover:bg-neutral-800 border-transparent"
+                    }`}
                 >
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-mono text-neutral-700 dark:text-neutral-300 font-medium">
@@ -193,15 +164,14 @@ function HeatmapView({
                           Analysis Details
                           {file.riskLevel && (
                             <span
-                              className={`text-[10px] px-2 py-0.5 rounded-full capitalize border ${
-                                file.riskLevel === "safe"
-                                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                                  : file.riskLevel === "low"
+                              className={`text-[10px] px-2 py-0.5 rounded-full capitalize border ${file.riskLevel === "safe"
+                                ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                : file.riskLevel === "low"
                                   ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                                   : file.riskLevel === "moderate"
-                                  ? "bg-orange-100 text-orange-800 border-orange-200"
-                                  : "bg-red-100 text-red-800 border-red-200"
-                              }`}
+                                    ? "bg-orange-100 text-orange-800 border-orange-200"
+                                    : "bg-red-100 text-red-800 border-red-200"
+                                }`}
                             >
                               {file.riskLevel}
                             </span>
@@ -244,10 +214,10 @@ export default function HeatmapPage() {
         const parsed = JSON.parse(storageData);
         if (parsed.state && parsed.state.heatmapData) {
           const loadedData = parsed.state.heatmapData;
-         /*  console.log("Heatmap data from localStorage:", loadedData); */
-          
+          /*  console.log("Heatmap data from localStorage:", loadedData); */
+
           let files: any[] = [];
-          
+
           // Handle various response structures
           if (loadedData.data && Array.isArray(loadedData.data.files)) {
             files = loadedData.data.files;
@@ -268,10 +238,10 @@ export default function HeatmapPage() {
               reason: f.reason,
               riskLevel: f.risk_level,
             }));
-            
+
             setData(transformedData);
           } else {
-             console.warn("Could not find files array in heatmap data:", loadedData);
+            console.warn("Could not find files array in heatmap data:", loadedData);
           }
         }
       } catch (error) {

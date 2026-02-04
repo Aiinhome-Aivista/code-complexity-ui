@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
+import Footer from "@/components/layouts/Footer";
 import {
   ArrowForward,
   Check,
@@ -144,9 +145,8 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 text-center text-neutral-500 text-sm border-t border-neutral-200">
-        © 2026 Aiinhome Technologies Private Limited. All rights reserved.
-      </footer>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

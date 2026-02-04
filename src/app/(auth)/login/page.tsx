@@ -42,7 +42,7 @@ export default function LoginPage() {
   return (
     <div className="animate-fade-in">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white font-bold text-xl shadow-lg shadow-blue-600/20 mb-4 animate-float">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-700 text-white font-bold text-xl shadow-lg shadow-indigo-900/10 mb-4 animate-float">
           CQ
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
@@ -65,7 +65,7 @@ export default function LoginPage() {
               type="email"
               placeholder="name@example.com"
               required
-              className="bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-blue-500"
+              className="bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-indigo-500"
             />
           </div>
           <div className="space-y-2">
@@ -80,13 +80,13 @@ export default function LoginPage() {
               type="password"
               placeholder="••••••••"
               required
-              className="bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-blue-500"
+              className="bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-indigo-500"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+            className="w-full bg-indigo-700 hover:bg-indigo-800 text-white cursor-pointer"
             disabled={isLoading}
           >
             {isLoading ? "Signing in..." : "Sign in"}
@@ -100,7 +100,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link
             href="/register"
-            className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
           >
             Sign up
           </Link>

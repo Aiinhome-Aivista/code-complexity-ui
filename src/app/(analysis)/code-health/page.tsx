@@ -32,11 +32,12 @@ const mockProjectHealth = {
 
 export default function CodeHealthAnalysis() {
   const [results, setResults] = useState<any>(null);
-  const [selectedMetric, setSelectedMetric] = useState<string>("OVERALL");
+  const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
 
   // Use results if available, otherwise fallback to mock (or empty if you prefer, but fallback is safer for now)
   const currentHealth = results?.codeHealth || mockProjectHealth;
-  const overallScore = currentHealth.overallScore;
+  const overallScoreVal = currentHealth.overallScore;
+  const overallScore = typeof overallScoreVal === 'object' && overallScoreVal !== null ? overallScoreVal.score : overallScoreVal;
   // Map snake_case or whatever keys from JSON to the UI expected keys if needed,
   // but looking at the JSON, they are mostly compatible except for casing in some places?
   // Actually, let's just use the keys from currentHealth.ratings directly if possible.
@@ -65,7 +66,7 @@ export default function CodeHealthAnalysis() {
   };
 
   const handleMetricClick = (metric: string) => {
-    setSelectedMetric(metric);
+    setSelectedMetric(prev => prev === metric ? null : metric);
   };
 
   // Helper to get color class based on score
@@ -101,14 +102,9 @@ export default function CodeHealthAnalysis() {
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-gray-100 dark:bg-neutral-950">
-      <div>
-        <h1 className="text-2xl text-neutral-900 dark:text-neutral-100 mb-1">
-          Code Health Analysis
-        </h1>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Overview of code quality, security, and performance metrics
-        </p>
-      </div>
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        Overview of code quality, security, and performance metrics
+      </p>
 
       {/* Main Score Card */}
       <Card className="px-0 bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
@@ -159,12 +155,11 @@ export default function CodeHealthAnalysis() {
               onClick={() => handleMetricClick("OVERALL")}
               className={`flex items-center gap-1 px-3 py-1 rounded-full border-2 shadow-sm bg-white dark:bg-black/20 cursor-pointer transition-transform hover:scale-105
                 ${selectedMetric === "OVERALL" ? "ring-1 ring-offset-1 ring-neutral-200" : ""}
-                ${
-                  overallScore >= 80
-                    ? "border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300"
-                    : overallScore >= 60
-                      ? "border-yellow-200 text-yellow-700 dark:border-yellow-800 dark:text-yellow-300"
-                      : "border-red-200 text-red-700 dark:border-red-800 dark:text-red-300"
+                ${overallScore >= 80
+                  ? "border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300"
+                  : overallScore >= 60
+                    ? "border-yellow-200 text-yellow-700 dark:border-yellow-800 dark:text-yellow-300"
+                    : "border-red-200 text-red-700 dark:border-red-800 dark:text-red-300"
                 }`}
             >
               <span className="text-md font-bold uppercase tracking-wide opacity-80">
@@ -178,9 +173,7 @@ export default function CodeHealthAnalysis() {
 
             <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-300 max-w-sm text-center font-medium">
               {overallScore >= 80 && "Excellent code quality"}
-              {overallScore >= 60 &&
-                overallScore < 80 &&
-                "Good, with room for improvement"}
+              {overallScore >= 60 && overallScore < 80 && "Good, with room for improvement"}
               {overallScore < 60 && "Requires attention"}
             </p>
           </div>
@@ -190,14 +183,18 @@ export default function CodeHealthAnalysis() {
       {/* Dynamic Detail Section */}
       <div className="transition-all duration-300 ease-in-out">
         <h2 className="text-lg text-neutral-900 dark:text-neutral-100 mb-4 font-semibold capitalize">
-          {selectedMetric === "OVERALL"
-            ? "Analysis Report"
-            : `${selectedMetric} Details`}
+          {!selectedMetric
+            ? "Key Insights"
+            : selectedMetric === "OVERALL"
+              ? "Overall Analysis"
+              : `${selectedMetric} Details`}
         </h2>
 
-        {selectedMetric === "OVERALL" ? (
+        {!selectedMetric ? (
+          /* Default View: Key Insights */
           <Card className="bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
             <CardContent className="px-3 py-4 [&:last-child]:pb-4 space-y-4">
+              {/* ... Existing Insights Logic ... */}
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
                   <Zap className="w-6 h-6" />
@@ -209,21 +206,32 @@ export default function CodeHealthAnalysis() {
                   {insights.length > 0 ? (
                     <ul className="space-y-3">
                       {insights.map((insight: string, idx: number) => (
-                        <li
-                          key={idx}
-                          className="flex gap-2 text-sm text-neutral-600 dark:text-neutral-300"
-                        >
+                        <li key={idx} className="flex gap-2 text-sm text-neutral-600 dark:text-neutral-300">
                           <span className="select-none text-blue-500">•</span>
                           {insight}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-neutral-500 italic">
-                      No specific insights available.
-                    </p>
+                    <p className="text-sm text-neutral-500 italic">No specific insights available.</p>
                   )}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : selectedMetric === "OVERALL" ? (
+          <Card className="bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm">
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <h4 className="font-medium text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-indigo-500" />
+                  Analysis Summary
+                </h4>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                  {(typeof currentHealth.overallScore === 'object' && currentHealth.overallScore?.reason)
+                    ? currentHealth.overallScore.reason
+                    : "No detailed analysis available for the overall score."}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -295,7 +303,7 @@ export default function CodeHealthAnalysis() {
                     </CardHeader>
                     <CardContent className="p-0 pb-0">
                       {metricData.affected_files &&
-                      metricData.affected_files.length > 0 ? (
+                        metricData.affected_files.length > 0 ? (
                         <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
                           {metricData.affected_files.map(
                             (file: string, idx: number) => (

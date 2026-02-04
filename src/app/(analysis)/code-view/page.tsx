@@ -11,6 +11,8 @@ import {
   Close as X,
   ChevronLeft,
   ChevronRight,
+  FactCheck,
+  CheckCircle,
 } from "@mui/icons-material";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -88,7 +90,7 @@ export function FileCodeView({
           <Badge
             variant="outline"
             className="text-xs bg-gray-100 border-neutral-200 text-neutral-600 cursor-pointer hover:bg-gray-200 transition-colors"
-            onClick={() => setIsCollapsed(false)}
+            onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {issues.length} issues
           </Badge>
@@ -151,136 +153,150 @@ export function FileCodeView({
           </Tooltip>
         </div>
         <ScrollArea className={`flex-1 ${isCollapsed ? "hidden" : "block"}`}>
-          <div className="p-4 space-y-4">
-            {issues.map((issue) => (
-              <Card
-                key={issue.id}
-                className={`${getIssueBgColor(
-                  issue.severity,
-                )} border-l-4 border-t-0 border-r-0 border-b-0 rounded-l-none bg-gray-200 dark:bg-neutral-800 shadow-sm`}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-2">
-                      <div className="mt-0.5">{getIssueIcon(issue.type)}</div>
-                      <div>
-                        <CardTitle className="text-sm text-neutral-900 dark:text-neutral-100 mb-1 leading-tight">
-                          {issue.message}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <Badge
-                            variant={
-                              issue.severity === "high"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                            className={`text-[10px] h-5 px-1.5 ${issue.severity === "safe"
-                              ? "bg-green-100 text-green-800 hover:bg-green-200"
-                              : ""
-                              }`}
-                          >
-                            {issue.severity}
-                          </Badge>
-                          <span className="text-xs text-neutral-500">
-                            Line {issue.line}
-                          </span>
+          {issues.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center p-8 text-center opacity-60 hover:opacity-100 transition-opacity min-h-[400px]">
+              <div className="w-24 h-24 mb-6 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                 <FactCheck sx={{ fontSize: 48 }} className="text-neutral-400 dark:text-neutral-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+                0 Issues Found
+              </h3>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-[240px] leading-relaxed">
+                We've analyzed this file and couldn't find any issues. Looks good!
+              </p>
+            </div>
+          ) : (
+            <div className="p-4 space-y-4">
+              {issues.map((issue) => (
+                <Card
+                  key={issue.id}
+                  className={`${getIssueBgColor(
+                    issue.severity,
+                  )} border-l-4 border-t-0 border-r-0 border-b-0 rounded-l-none bg-gray-200 dark:bg-neutral-800 shadow-sm`}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-2">
+                        <div className="mt-0.5">{getIssueIcon(issue.type)}</div>
+                        <div>
+                          <CardTitle className="text-sm text-neutral-900 dark:text-neutral-100 mb-1 leading-tight">
+                            {issue.message}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <Badge
+                              variant={
+                                issue.severity === "high"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                              className={`text-[10px] h-5 px-1.5 ${issue.severity === "safe"
+                                ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                : ""
+                                }`}
+                            >
+                              {issue.severity}
+                            </Badge>
+                            <span className="text-xs text-neutral-500">
+                              Line {issue.line}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-0">
-                  {/* Facts */}
-                  {issue.facts && issue.facts.length > 0 && (
-                    <div>
-                      <h4 className="text-[10px] text-neutral-500 mb-1.5 uppercase tracking-wider font-semibold">
-                        Facts
-                      </h4>
-                      <ul className="space-y-1">
-                        {issue.facts.map((fact, idx) => (
-                          <li
-                            key={idx}
-                            className="text-xs text-neutral-600 dark:text-neutral-400 flex gap-2"
-                          >
-                            <span className="text-neutral-400 dark:text-neutral-600">
-                              •
-                            </span>
-                            <span>{fact}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Rule */}
-                  <div>
-                    <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
-                      Rule Triggered
-                    </h4>
-                    <code className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded font-mono border border-blue-200 dark:border-blue-900/50">
-                      {issue.rule}
-                    </code>
-                  </div>
-
-                  {/* Confidence */}
-                  <div>
-                    <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
-                      Confidence
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500"
-                          style={{ width: `${issue.confidence}%` }}
-                        />
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    {/* Facts */}
+                    {issue.facts && issue.facts.length > 0 && (
+                      <div>
+                        <h4 className="text-[10px] text-neutral-500 mb-1.5 uppercase tracking-wider font-semibold">
+                          Facts
+                        </h4>
+                        <ul className="space-y-1">
+                          {issue.facts.map((fact, idx) => (
+                            <li
+                              key={idx}
+                              className="text-xs text-neutral-600 dark:text-neutral-400 flex gap-2"
+                            >
+                              <span className="text-neutral-400 dark:text-neutral-600">
+                                •
+                              </span>
+                              <span>{fact}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
-                        {issue.confidence}%
-                      </span>
-                    </div>
-                  </div>
+                    )}
 
-                  {/* AI Explanation */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
-                        Suggested Explanation
+                    {/* Rule */}
+                    <div>
+                      <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
+                        Rule Triggered
                       </h4>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] h-4 px-1 border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/10"
-                      >
-                        AI
-                      </Badge>
+                      <code className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded font-mono border border-blue-200 dark:border-blue-900/50">
+                        {issue.rule}
+                      </code>
                     </div>
-                    <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed bg-gray-300 dark:bg-neutral-900/50 p-2.5 rounded border border-neutral-300 dark:border-neutral-800/50">
-                      {issue.explanation}
-                    </p>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      size="sm"
-                      className="flex-1 h-7 text-xs bg-gray-700 hover:bg-gray-800 text-gray-100 border-none cursor-pointer"
-                      onClick={() => onCopy(issue)}
-                    >
-                      <Copy sx={{ fontSize: 14 }} className="mr-1.5" />
-                      Copy
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 h-7 text-xs bg-gray-400 hover:bg-gray-500 text-gray-900 border-none cursor-pointer"
-                      onClick={() => onIgnore(issue.id)}
-                    >
-                      <X sx={{ fontSize: 14 }} className="mr-1.5" />
-                      Ignore
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    {/* Confidence */}
+                    <div>
+                      <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
+                        Confidence
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500"
+                            style={{ width: `${issue.confidence}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
+                          {issue.confidence}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* AI Explanation */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
+                          Suggested Explanation
+                        </h4>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] h-4 px-1 border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/10"
+                        >
+                          AI
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed bg-gray-300 dark:bg-neutral-900/50 p-2.5 rounded border border-neutral-300 dark:border-neutral-800/50">
+                        {issue.explanation}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        className="flex-1 h-7 text-xs bg-gray-700 hover:bg-gray-800 text-gray-100 border-none cursor-pointer"
+                        onClick={() => onCopy(issue)}
+                      >
+                        <Copy sx={{ fontSize: 14 }} className="mr-1.5" />
+                        Copy
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 h-7 text-xs bg-gray-400 hover:bg-gray-500 text-gray-900 border-none cursor-pointer"
+                        onClick={() => onIgnore(issue.id)}
+                      >
+                        <X sx={{ fontSize: 14 }} className="mr-1.5" />
+                        Ignore
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </ScrollArea>
       </div>
     </div>
@@ -495,8 +511,6 @@ export default function CodeViewPage() {
           variant="filled"
           sx={{
             width: "100%",
-            bgcolor: toast.severity === "success" ? "#00a545ff" : "#ae0000ff",
-            color: "#ffffff",
           }}
         >
           {toast.message}

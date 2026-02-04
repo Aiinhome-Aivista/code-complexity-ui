@@ -37,7 +37,7 @@ export const RecentActivityList = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="">
       <div className="flex items-center justify-between pb-2 border-b border-gray-400/70">
         <h3 className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
           <History fontSize="small" className="text-gray-600" />

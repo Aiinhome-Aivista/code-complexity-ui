@@ -381,11 +381,6 @@ export function UploadModal({
           variant="filled"
           sx={{
             width: "100%",
-            bgcolor:
-              toast.severity === "success"
-                ? "#00a545ff" // Matching "Done" green
-                : "#ae0000ff", // Matching "Failed" red
-            color: "#ffffff",
           }}
         >
           {toast.message}
