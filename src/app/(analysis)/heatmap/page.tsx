@@ -13,6 +13,8 @@ interface HeatmapData {
   size: number;
   reason?: string;
   riskLevel?: string;
+  solution?: string;
+  suggestedCode?: string;
 }
 
 
@@ -188,6 +190,30 @@ function HeatmapView({
                         {file.reason || "No detailed analysis available."}
                       </p>
                     </div>
+
+                    {file.solution && (
+                      <div className="mt-3">
+                        <h4 className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
+                          Solution
+                        </h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed bg-white dark:bg-neutral-900 p-3 rounded border border-neutral-200 dark:border-neutral-800">
+                          {file.solution}
+                        </p>
+                      </div>
+                    )}
+
+                    {file.suggestedCode && (
+                      <div className="mt-3">
+                        <h4 className="text-xs font-semibold text-neutral-900 mb-1">
+                          Suggested Code
+                        </h4>
+                        <div className="relative bg-neutral-900 rounded-md overflow-hidden border border-neutral-800">
+                          <pre className="p-3 text-xs text-neutral-300 font-mono overflow-x-auto">
+                            <code>{file.suggestedCode}</code>
+                          </pre>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -237,6 +263,8 @@ export default function HeatmapPage() {
               size: f.risk,
               reason: f.reason,
               riskLevel: f.risk_level,
+              solution: f.solution,
+              suggestedCode: f.suggested_code,
             }));
 
             setData(transformedData);
