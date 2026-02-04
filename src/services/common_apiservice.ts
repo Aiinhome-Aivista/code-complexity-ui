@@ -3,10 +3,11 @@ import { API_ENDPOINTS } from "@/config/endpoints";
 import type { UploadResponse, SessionDataTableResponse, ResultsResponse } from "@/types/common_api_types";
 
 export const commonService = {
-  uploadFiles: async (formData: FormData): Promise<UploadResponse | null> => {
+  uploadFiles: async (formData: FormData, signal?: AbortSignal): Promise<UploadResponse | null> => {
     return apiservice<UploadResponse>(API_ENDPOINTS.POST.UPLOAD, {
       method: "POST",
       data: formData,
+      signal,
     });
   },
   getSessionDataTable: async (userId: string, search?: string, status?: string): Promise<SessionDataTableResponse | null> => {

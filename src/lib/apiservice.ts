@@ -72,7 +72,7 @@ const apiservice = async <T = any>(
   try {
     const response = await fetch(fullUrl, config);
 
-    if (response.status === 204) {
+    if (response.status === 204 || response.status === 504 || response.status === 408) {
       return null;
     }
 

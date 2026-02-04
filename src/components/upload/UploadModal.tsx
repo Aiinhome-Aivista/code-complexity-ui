@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -60,9 +60,29 @@ export function UploadModal({
     message: "",
     severity: "success",
   });
+  const [loadingText, setLoadingText] = useState("Uploading Project...");
+
+  useEffect(() => {
+    if (isUploading) {
+      const texts = [
+        "Uploading Project...",
+        "Analyzing Project Structure..."
+      ];
+      let index = 0;
+      setLoadingText(texts[0]);
+      
+      const interval = setInterval(() => {
+        index = (index + 1) % texts.length;
+        setLoadingText(texts[index]);
+      }, 2500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isUploading]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -166,10 +186,14 @@ export function UploadModal({
       });
     }
 
+    // Create new abort controller
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       setIsUploading(true);
       console.log("Starting upload...");
-      await commonService.uploadFiles(formData);
+      await commonService.uploadFiles(formData, controller.signal);
       console.log("Upload successful");
       setToast({
         open: true,
@@ -182,7 +206,12 @@ export function UploadModal({
       onOpenChange(false);
       setSelectedItem(null);
       setProjectName(""); // Reset project name
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === "AbortError" || error.code === "ERR_CANCELED") {
+        console.log("Upload cancelled by user");
+        // Optional: show a small info toast or just do nothing
+        return;
+      }
       console.error("Upload failed", error);
       setToast({
         open: true,
@@ -191,6 +220,21 @@ export function UploadModal({
       });
     } finally {
       setIsUploading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCancelUpload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsUploading(false);
+      // Reset selection on cancel
+      resetSelection();
+      onOpenChange(false);
+    } else {
+      resetSelection();
+      onOpenChange(false);
     }
   };
 
@@ -245,10 +289,43 @@ export function UploadModal({
             onDrop={handleDrop}
           >
             {isUploading && (
-              <div className="absolute inset-0 bg-gray-200/80 z-50 flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in duration-200">
-                <CircularProgress size={50} className="text-blue-600/30 mb-4" />
-                <p className="text-blue-700/70 font-semibold animate-pulse">
-                  Uploading Project...
+              <div className="absolute inset-0 bg-white/95 dark:bg-neutral-900/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
+                {/* Scanner Animation Container */}
+                <div className="relative w-24 h-24 mb-8">
+                  {/* File Icon Base */}
+                  <div className="absolute inset-0 flex items-center justify-center text-blue-100 dark:text-blue-900/30">
+                    <InsertDriveFile style={{ fontSize: 80 }} />
+                  </div>
+                  
+                  {/* Scanning Beam */}
+                  <div 
+                    className="absolute z-10 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+                    style={{
+                      animation: 'scan 2s ease-in-out infinite'
+                    }}
+                  />
+                  
+                  {/* Grid Lines Overlay */}
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:10px_10px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
+                </div>
+
+                <style dangerouslySetInnerHTML={{
+                  __html: `
+                    @keyframes scan {
+                      0% { top: 0%; opacity: 0; }
+                      15% { top: 0%; opacity: 1; }
+                      50% { top: 100%; opacity: 1; }
+                      85% { top: 100%; opacity: 0; }
+                      100% { top: 0%; opacity: 0; }
+                    }
+                  `
+                }} />
+
+                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 animate-pulse mb-2">
+                  {loadingText}
+                </h3>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  Please wait while we process your files...
                 </p>
               </div>
             )}
@@ -348,11 +425,7 @@ export function UploadModal({
           <Button
             variant="outline"
             className="cursor-pointer border-gray-500 text-white bg-gray-800/30 hover:bg-gray-800/40"
-            disabled={isUploading}
-            onClick={() => {
-              resetSelection();
-              onOpenChange(false);
-            }}
+            onClick={handleCancelUpload}
           >
             Cancel
           </Button>
