@@ -40,6 +40,8 @@ export interface Issue {
   confidence: number;
   explanation: string;
   facts: string[];
+  original_snippet?: string;
+  suggested_fix?: string;
 }
 
 export interface Endpoint {

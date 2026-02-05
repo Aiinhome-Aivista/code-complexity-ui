@@ -13,7 +13,9 @@ import {
   ChevronRight,
   FactCheck,
   CheckCircle,
+  ArrowForward,
 } from "@mui/icons-material";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -156,7 +158,7 @@ export function FileCodeView({
           {issues.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center p-8 text-center opacity-60 hover:opacity-100 transition-opacity min-h-[400px]">
               <div className="w-24 h-24 mb-6 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-                 <FactCheck sx={{ fontSize: 48 }} className="text-neutral-400 dark:text-neutral-500" />
+                <FactCheck sx={{ fontSize: 48 }} className="text-neutral-400 dark:text-neutral-500" />
               </div>
               <h3 className="text-xl font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
                 0 Issues Found
@@ -273,6 +275,30 @@ export function FileCodeView({
                       </p>
                     </div>
 
+                    {/* Original Snippet */}
+                    {issue.original_snippet && (
+                      <div className="mt-3">
+                        <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
+                          Current Code
+                        </h4>
+                        <pre className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/10 p-2 rounded border border-red-200 dark:border-red-900/30 whitespace-pre-wrap break-all font-mono">
+                          <code>{issue.original_snippet}</code>
+                        </pre>
+                      </div>
+                    )}
+
+                    {/* Suggested Fix */}
+                    {issue.suggested_fix && (
+                      <div className="mt-3">
+                        <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
+                          Suggested Fix
+                        </h4>
+                        <pre className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/10 p-2 rounded border border-green-200 dark:border-green-900/30 whitespace-pre-wrap break-all font-mono">
+                          <code>{issue.suggested_fix}</code>
+                        </pre>
+                      </div>
+                    )}
+
                     {/* Actions */}
                     <div className="flex gap-2 pt-1">
                       <Button
@@ -366,28 +392,34 @@ export default function CodeViewPage() {
 
       // Transform issues
       if (selectedFileNode.issues) {
-        const transformedIssues: Issue[] = selectedFileNode.issues.map(
-          (apiIssue: any, index: number) => ({
-            id: `api-${index}`,
-            type: (apiIssue.type?.toLowerCase() as any) || "complexity",
-            severity:
-              apiIssue.severity?.toLowerCase() === "high" ||
-                apiIssue.severity?.toLowerCase() === "critical"
-                ? "high"
-                : apiIssue.severity?.toLowerCase() === "medium"
-                  ? "moderate"
-                  : apiIssue.severity?.toLowerCase() === "low"
-                    ? "safe"
-                    : "moderate",
-            line: apiIssue.line,
-            message: apiIssue.title,
-            rule: apiIssue.title,
-            confidence: 100,
-            explanation: apiIssue.suggested_explanation,
-            facts: [],
-          }),
-        );
-        setIssues(transformedIssues);
+        const uniqueIssues = new Map<string, Issue>();
+        selectedFileNode.issues.forEach((apiIssue: any, index: number) => {
+             const key = `${apiIssue.line}-${apiIssue.title}`;
+             if (!uniqueIssues.has(key)) {
+                uniqueIssues.set(key, {
+                    id: `api-${index}`,
+                    type: (apiIssue.type?.toLowerCase() as any) || "complexity",
+                    severity:
+                      apiIssue.severity?.toLowerCase() === "high" ||
+                      apiIssue.severity?.toLowerCase() === "critical"
+                        ? "high"
+                        : apiIssue.severity?.toLowerCase() === "medium"
+                        ? "moderate"
+                        : apiIssue.severity?.toLowerCase() === "low"
+                        ? "safe"
+                        : "moderate",
+                    line: apiIssue.line,
+                    message: apiIssue.title,
+                    rule: apiIssue.title,
+                    confidence: 100,
+                    explanation: apiIssue.suggested_explanation,
+                    original_snippet: apiIssue.original_snippet,
+                    suggested_fix: apiIssue.suggested_fix,
+                    facts: [],
+                });
+             }
+        });
+        setIssues(Array.from(uniqueIssues.values()));
       } else {
         setIssues([]);
       }
@@ -399,7 +431,9 @@ export default function CodeViewPage() {
   };
 
   const handleCopy = (issue: Issue) => {
-    const textToCopy = `Issue: ${issue.message}\nSeverity: ${issue.severity}\nLine: ${issue.line}\nRule: ${issue.rule}\nExplanation: ${issue.explanation}`;
+    let textToCopy = `Issue: ${issue.message}\nSeverity: ${issue.severity}\nLine: ${issue.line}\nRule: ${issue.rule}\nExplanation: ${issue.explanation}`;
+    if (issue.original_snippet) textToCopy += `\nSnippet: ${issue.original_snippet}`;
+    if (issue.suggested_fix) textToCopy += `\nFix: ${issue.suggested_fix}`;
     navigator.clipboard.writeText(textToCopy).then(() => {
       console.log("Copied to clipboard");
       setToast({
@@ -410,7 +444,7 @@ export default function CodeViewPage() {
     });
   };
 
-  const handleCloseToast = () => { 
+  const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, open: false }));
   };
 
@@ -444,48 +478,39 @@ export default function CodeViewPage() {
   // Empty Data State
   if (!fileNodeData.data?.FileNode || fileNodeData.data.FileNode.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center p-6 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-l border-neutral-200 dark:border-neutral-800">
-        <div className="text-center max-w-sm">
-          <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm ring-8 ring-orange-50/50 dark:ring-orange-900/20">
-            <AlertTriangle
-              sx={{ fontSize: 40 }}
-              className="text-orange-500 dark:text-orange-400"
-            />
-          </div>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-            No Analysable Files Found
-          </h3>
-          <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed">
-            We couldn't find any supported files to analyze in this project.
-            Please check your file extensions or selection.
-          </p>
-        </div>
+      <div className="h-full flex items-center justify-center p-6 bg-gray-100 dark:bg-neutral-950 border-l border-neutral-200 dark:border-neutral-800">
+        <Card className="max-w-md w-full bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm">
+          <CardContent className="flex flex-col items-center text-center p-8 space-y-4">
+            <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center shadow-inner">
+              <AlertTriangle
+                sx={{ fontSize: 32 }}
+                className="text-neutral-400 dark:text-neutral-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                No Analysable Files
+              </h3>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed">
+                We couldn't find any supported files to analyze in this project.
+                This might be due to file exclusions or an unsupported project structure.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Link href="/dashboard" passHref>
+                <Button variant="outline" className="gap-2 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border-neutral-300 dark:border-neutral-700 shadow-sm">
+                  <ArrowForward sx={{ fontSize: 16 }} className="rotate-180" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Not Selected State
-  if (!selectedFileNode) {
-    return (
-      <div className="h-full flex items-center justify-center p-6 bg-gradient-to-br from-indigo-50/80 to-purple-50/80 dark:from-indigo-950/20 dark:to-purple-950/20 border-l border-neutral-200 dark:border-neutral-800">
-        <div className="text-center max-w-sm">
-          <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm ring-8 ring-indigo-50/50 dark:ring-indigo-900/20">
-            <Copy
-              sx={{ fontSize: 36 }}
-              className="text-indigo-600 dark:text-indigo-400"
-            />
-          </div>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-            Select a File to Analyze
-          </h3>
-          <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed">
-            Choose a file from the sidebar to view detailed code issues,
-            complexity metrics, and AI-powered insights.
-          </p>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="h-full overflow-hidden">
