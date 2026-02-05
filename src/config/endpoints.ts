@@ -14,5 +14,6 @@ export const API_ENDPOINTS = {
     FILENODE: `${BASE_URL}api/analyze_project_ai`,
     DELETE: `${BASE_URL}api/projects/delete`,
     FLOW: `${BASE_URL}api/relationships_flow`,
+    APPLY_FIX: `${BASE_URL}/api/apply-ai-fix`,
   },
 } as const;

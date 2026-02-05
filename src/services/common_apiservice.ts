@@ -48,4 +48,10 @@ export const commonService = {
       data: payload,
     });
   },
+  applyFix: async (payload: any): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.POST.APPLY_FIX, {
+      method: "POST",
+      data: payload,
+    });
+  },
 };

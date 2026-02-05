@@ -24,12 +24,16 @@ import { ScrollArea } from "@/components/ui/ScrollArea";
 import { useUIStore } from "@/store/uiStore";
 import { Snackbar, Alert, Skeleton, Tooltip } from "@mui/material";
 
+import { commonService } from "@/services/common_apiservice";
+import { useAuthStore } from "@/store/authStore";
+
 interface FileCodeViewProps {
   code: string;
   issues: Issue[];
   fileName: string;
   onIgnore: (id: string) => void;
-  onCopy: (issue: Issue) => void;
+  onApplyFix: (issue: Issue) => void;
+  exitingIssueIds: Set<string>;
 }
 
 export function FileCodeView({
@@ -37,7 +41,8 @@ export function FileCodeView({
   issues,
   fileName,
   onIgnore,
-  onCopy,
+  onApplyFix,
+  exitingIssueIds,
 }: FileCodeViewProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const codeLines = code.split("\n");
@@ -170,8 +175,15 @@ export function FileCodeView({
           ) : (
             <div className="p-4 space-y-4">
               {issues.map((issue) => (
+                <div 
+                  key={issue.id} 
+                  className={`transition-all duration-500 ease-in-out ${
+                    exitingIssueIds.has(issue.id) 
+                      ? "opacity-0 translate-x-full max-h-0 overflow-hidden mb-0" 
+                      : "opacity-100 max-h-[2000px]"
+                  }`}
+                >
                 <Card
-                  key={issue.id}
                   className={`${getIssueBgColor(
                     issue.severity,
                   )} border-l-4 border-t-0 border-r-0 border-b-0 rounded-l-none bg-gray-200 dark:bg-neutral-800 shadow-sm`}
@@ -181,7 +193,7 @@ export function FileCodeView({
                       <div className="flex items-start gap-2">
                         <div className="mt-0.5">{getIssueIcon(issue.type)}</div>
                         <div>
-                          <CardTitle className="text-sm text-neutral-900 dark:text-neutral-100 mb-1 leading-tight">
+                          <CardTitle className="text-sm text-neutral-900 dark:text-neutral-100 mb-1 leading-snug break-words whitespace-normal">
                             {issue.message}
                           </CardTitle>
                           <div className="flex items-center gap-2 mt-1.5">
@@ -234,7 +246,7 @@ export function FileCodeView({
                       <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
                         Rule Triggered
                       </h4>
-                      <code className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded font-mono border border-blue-200 dark:border-blue-900/50">
+                      <code className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded font-mono border border-blue-200 dark:border-blue-900/50 break-all whitespace-normal">
                         {issue.rule}
                       </code>
                     </div>
@@ -281,7 +293,7 @@ export function FileCodeView({
                         <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
                           Current Code
                         </h4>
-                        <pre className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/10 p-2 rounded border border-red-200 dark:border-red-900/30 whitespace-pre-wrap break-all font-mono">
+                        <pre className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/10 p-2 rounded border border-red-200 dark:border-red-900/30 whitespace-pre-wrap break-all font-mono overflow-x-hidden">
                           <code>{issue.original_snippet}</code>
                         </pre>
                       </div>
@@ -293,7 +305,7 @@ export function FileCodeView({
                         <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
                           Suggested Fix
                         </h4>
-                        <pre className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/10 p-2 rounded border border-green-200 dark:border-green-900/30 whitespace-pre-wrap break-all font-mono">
+                        <pre className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/10 p-2 rounded border border-green-200 dark:border-green-900/30 whitespace-pre-wrap break-all font-mono overflow-x-hidden">
                           <code>{issue.suggested_fix}</code>
                         </pre>
                       </div>
@@ -303,11 +315,12 @@ export function FileCodeView({
                     <div className="flex gap-2 pt-1">
                       <Button
                         size="sm"
-                        className="flex-1 h-7 text-xs bg-gray-700 hover:bg-gray-800 text-gray-100 border-none cursor-pointer"
-                        onClick={() => onCopy(issue)}
+                        className="flex-1 h-7 text-xs bg-indigo-600 hover:bg-indigo-700 text-white border-none cursor-pointer font-medium"
+                        onClick={() => onApplyFix(issue)}
+                        disabled={!issue.suggested_fix}
                       >
-                        <Copy sx={{ fontSize: 14 }} className="mr-1.5" />
-                        Copy
+                        <CheckCircle sx={{ fontSize: 14 }} className="mr-1.5" />
+                        Apply Fix
                       </Button>
                       <Button
                         size="sm"
@@ -320,6 +333,7 @@ export function FileCodeView({
                     </div>
                   </CardContent>
                 </Card>
+                </div>
               ))}
             </div>
           )}
@@ -333,12 +347,15 @@ export default function CodeViewPage() {
   const fileNodeData = useUIStore((state) => state.fileNodeData);
   const selectedFileNode = useUIStore((state) => state.selectedFileNode);
   const setSelectedFileNode = useUIStore((state) => state.setSelectedFileNode);
+  const activeSessionId = useUIStore((state) => state.activeSessionId);
+  const { user } = useAuthStore();
 
   const searchParams = useSearchParams();
   const fileParam = searchParams.get("file");
 
   // Sync URL -> State
   useEffect(() => {
+    console.log("fileNodeData", fileNodeData);
     if (fileParam && fileNodeData?.data?.FileNode) {
       if (!selectedFileNode || selectedFileNode.name !== fileParam) {
         // Deep search for node
@@ -394,30 +411,30 @@ export default function CodeViewPage() {
       if (selectedFileNode.issues) {
         const uniqueIssues = new Map<string, Issue>();
         selectedFileNode.issues.forEach((apiIssue: any, index: number) => {
-             const key = `${apiIssue.line}-${apiIssue.title}`;
-             if (!uniqueIssues.has(key)) {
-                uniqueIssues.set(key, {
-                    id: `api-${index}`,
-                    type: (apiIssue.type?.toLowerCase() as any) || "complexity",
-                    severity:
-                      apiIssue.severity?.toLowerCase() === "high" ||
-                      apiIssue.severity?.toLowerCase() === "critical"
-                        ? "high"
-                        : apiIssue.severity?.toLowerCase() === "medium"
-                        ? "moderate"
-                        : apiIssue.severity?.toLowerCase() === "low"
-                        ? "safe"
-                        : "moderate",
-                    line: apiIssue.line,
-                    message: apiIssue.title,
-                    rule: apiIssue.title,
-                    confidence: 100,
-                    explanation: apiIssue.suggested_explanation,
-                    original_snippet: apiIssue.original_snippet,
-                    suggested_fix: apiIssue.suggested_fix,
-                    facts: [],
-                });
-             }
+          const key = `${apiIssue.line}-${apiIssue.title}`;
+          if (!uniqueIssues.has(key)) {
+            uniqueIssues.set(key, {
+              id: `api-${index}`,
+              type: (apiIssue.type?.toLowerCase() as any) || "complexity",
+              severity:
+                apiIssue.severity?.toLowerCase() === "high" ||
+                  apiIssue.severity?.toLowerCase() === "critical"
+                  ? "high"
+                  : apiIssue.severity?.toLowerCase() === "medium"
+                    ? "moderate"
+                    : apiIssue.severity?.toLowerCase() === "low"
+                      ? "safe"
+                      : "moderate",
+              line: apiIssue.line,
+              message: apiIssue.title,
+              rule: apiIssue.title,
+              confidence: 100,
+              explanation: apiIssue.suggested_explanation,
+              original_snippet: apiIssue.original_snippet,
+              suggested_fix: apiIssue.suggested_fix,
+              facts: [],
+            });
+          }
         });
         setIssues(Array.from(uniqueIssues.values()));
       } else {
@@ -427,21 +444,112 @@ export default function CodeViewPage() {
   }, [fileNodeData, selectedFileNode]);
 
   const handleIgnore = (id: string) => {
-    setIssues((prev) => prev.filter((issue) => issue.id !== id));
+    setExitingIssueIds((prev) => new Set(prev).add(id));
+    setTimeout(() => {
+        setIssues((prev) => prev.filter((issue) => issue.id !== id));
+        setExitingIssueIds((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+    }, 500);
   };
 
-  const handleCopy = (issue: Issue) => {
-    let textToCopy = `Issue: ${issue.message}\nSeverity: ${issue.severity}\nLine: ${issue.line}\nRule: ${issue.rule}\nExplanation: ${issue.explanation}`;
-    if (issue.original_snippet) textToCopy += `\nSnippet: ${issue.original_snippet}`;
-    if (issue.suggested_fix) textToCopy += `\nFix: ${issue.suggested_fix}`;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      console.log("Copied to clipboard");
+  const [exitingIssueIds, setExitingIssueIds] = useState<Set<string>>(new Set());
+
+
+
+  const handleApplyFix = async (issue: Issue) => {
+    if (!issue.suggested_fix) {
       setToast({
         open: true,
-        message: "Copied to clipboard",
-        severity: "success",
+        message: "No fix available to apply",
+        severity: "error",
       });
-    });
+      return;
+    }
+
+    if (!activeSessionId || !user) {
+      setToast({
+        open: true,
+        message: "Session or User information missing. Please return to dashboard.",
+        severity: "error",
+      });
+      return;
+    }
+
+    console.log("ApplyFix Debug - SelectedNode:", selectedFileNode);
+
+    try {
+      const payload = {
+        user_id: user.id,
+        session_id: activeSessionId,
+        // Use filename preferrably, fallback to path (stripping leading slash if needed)
+        filename: selectedFileNode?.filename || (selectedFileNode?.path?.startsWith('/') ? selectedFileNode?.path.slice(1) : selectedFileNode?.path),
+        original_snippet: issue.original_snippet,
+        suggested_fix: issue.suggested_fix
+      };
+
+      const response = await commonService.applyFix(payload);
+
+      if (response && response.isSuccess) {
+        setToast({
+          open: true,
+          message: "Fix applied successfully!",
+          severity: "success",
+        });
+
+        // 1. Reload Code Content
+        try {
+          const res = await fetch(selectedFileNode?.found_at);
+          const text = await res.text();
+          setCode(text);
+        } catch (err) {
+          console.error("Error reloading code:", err);
+        }
+
+        // 2. Remove the issue permanently from store (persists across reloads)
+        if (selectedFileNode?.id) {
+            // Add to exiting set to trigger animation
+            setExitingIssueIds((prev) => new Set(prev).add(issue.id));
+            
+            // Wait for animation (500ms matches CSS duration)
+            setTimeout(() => {
+                useUIStore.getState().removeIssue(selectedFileNode.id, issue.id);
+                setExitingIssueIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(issue.id);
+                    return next;
+                });
+            }, 500);
+        } else {
+             // Fallback to local state if node ID is missing using same animation
+             setExitingIssueIds((prev) => new Set(prev).add(issue.id));
+             setTimeout(() => {
+                setIssues((prev) => prev.filter((i) => i.id !== issue.id));
+                setExitingIssueIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(issue.id);
+                    return next;
+                });
+             }, 500);
+        }
+
+      } else {
+        setToast({
+          open: true,
+          message: response?.message || "Failed to apply fix",
+          severity: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Apply Fix Error:", error);
+      setToast({
+        open: true,
+        message: "Error applying fix",
+        severity: "error",
+      });
+    }
   };
 
   const handleCloseToast = () => {
@@ -511,7 +619,6 @@ export default function CodeViewPage() {
   }
 
 
-
   return (
     <div className="h-full overflow-hidden">
       <FileCodeView
@@ -519,7 +626,8 @@ export default function CodeViewPage() {
         issues={issues}
         fileName={selectedFileNode?.name || "No File Selected"}
         onIgnore={handleIgnore}
-        onCopy={handleCopy}
+        onApplyFix={handleApplyFix}
+        exitingIssueIds={exitingIssueIds}
       />
       <Snackbar
         open={toast.open}
@@ -544,3 +652,4 @@ export default function CodeViewPage() {
     </div>
   );
 }
+

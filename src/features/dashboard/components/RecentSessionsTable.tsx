@@ -111,6 +111,7 @@ export function RecentSessionsTable({
     setHeatmapData,
     setFileNodeData,
     setActiveProjectName,
+    setActiveSessionId,
     setFlowData,
   } = useUIStore();
   const {
@@ -132,6 +133,7 @@ export function RecentSessionsTable({
 
         if (selectedSession) {
           setActiveProjectName(selectedSession.name);
+          setActiveSessionId(selectedSession.session_id); // Set active session ID
           router.push("/code-health");
 
           // Fetch Heatmap Data and FileNode Data in background with dynamic IDs
