@@ -2,57 +2,60 @@
 
 import { useState, useEffect } from "react";
 
-type MetricType = "Complexity" | "Security" | "Reliability" | "Performance" | "Size";
+type MetricType = "complexity" | "security" | "performance" | "size";
 
-interface HeatmapData {
-  file: string;
+interface FileData {
+  filename: string;
   lines: number;
-  complexity: number;
-  security: number;
-  performance: number;
-  size: number;
-  reason?: string;
-  riskLevel?: string;
-  solution?: string;
-  suggestedCode?: string;
+  reason: string;
+  risk: number;
+  risk_level: string;
+  solution: string;
+  suggested_code: string;
+}
+
+interface MetricCategory {
+  files: FileData[];
+  legend: Record<string, string>;
+}
+
+interface MetricsData {
+  complexity?: MetricCategory;
+  performance?: MetricCategory;
+  security?: MetricCategory;
+  size?: MetricCategory;
+}
+
+interface HeatmapResponse {
+  data: {
+    metrics: MetricsData;
+  };
+  isSuccess: boolean;
+  message: string;
+  statuscode: number;
 }
 
 
 interface HeatmapViewProps {
-  data: HeatmapData[];
+  files: FileData[];
   selectedMetric: MetricType;
   onMetricChange: (metric: MetricType) => void;
 }
 
 function HeatmapView({
-  data,
+  files,
   selectedMetric,
   onMetricChange,
 }: HeatmapViewProps) {
-  const [selectedFile, setSelectedFile] = useState<HeatmapData | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [selectedRiskFilter, setSelectedRiskFilter] = useState<string | null>(null);
 
-  const metrics: MetricType[] = [
-    "Complexity",
-    "Security",
-    "Performance",
-    "Size",
+  const metrics: { id: MetricType; label: string }[] = [
+    { id: "complexity", label: "Complexity" },
+    { id: "performance", label: "Performance" },
+    { id: "security", label: "Security" },
+    { id: "size", label: "Size" },
   ];
-
-  const getMetricValue = (item: HeatmapData, metric: MetricType): number => {
-    switch (metric) {
-      case "Complexity":
-        return item.complexity;
-      case "Security":
-        return item.security;
-      case "Performance":
-        return item.performance;
-      case "Size":
-        return item.size;
-      default:
-        return 0;
-    }
-  };
 
   const getRiskColor = (value: number) => {
     if (value >= 80) return "bg-red-600 dark:bg-red-600";
@@ -71,16 +74,37 @@ function HeatmapView({
   ];
 
   const filteredData = selectedRiskFilter
-    ? data.filter((item) => item.riskLevel === selectedRiskFilter)
-    : data;
+    ? files.filter((item) => item.risk_level === selectedRiskFilter)
+    : files;
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-gray-100 dark:bg-neutral-950">
       {/* Header Section */}
       <div className="space-y-4">
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Visual representation of risk distribution across files
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+            Visual representation of risk distribution across files by metric
+          </p>
+        </div>
+
+        {/* Metric Selector Tabs */}
+        <div className="flex p-1 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 w-fit">
+          {metrics.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => {
+                onMetricChange(m.id);
+                setSelectedFile(null); // Reset selection on metric change
+              }}
+              className={`cursor-pointer px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${selectedMetric === m.id
+                ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
+                }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Legend Card */}
@@ -124,14 +148,14 @@ function HeatmapView({
       <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-300 dark:border-neutral-800 shadow-sm space-y-2">
         {Array.isArray(filteredData) && filteredData.length > 0 ? (
           filteredData.map((file, index) => {
-            const value = getMetricValue(file, selectedMetric);
+            const value = file.risk;
             const colorClass = getRiskColor(value);
-            const isSelected = selectedFile?.file === file.file;
+            const isSelected = selectedFile?.filename === file.filename;
 
             return (
               <div key={index} className="space-y-2">
                 <div
-                  onClick={() => setSelectedFile(selectedFile?.file === file.file ? null : file)}
+                  onClick={() => setSelectedFile(selectedFile?.filename === file.filename ? null : file)}
                   className={`space-y-1.5 p-3 rounded-lg cursor-pointer transition-all duration-200 border ${isSelected
                     ? "bg-white dark:bg-neutral-800 border-indigo-500 ring-1 ring-indigo-500"
                     : "hover:bg-gray-300/50 dark:hover:bg-neutral-800 border-transparent"
@@ -139,7 +163,7 @@ function HeatmapView({
                 >
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-mono text-neutral-700 dark:text-neutral-300 font-medium">
-                      {file.file}
+                      {file.filename}
                     </span>
                     <span className="text-neutral-500 dark:text-neutral-500">
                       {file.lines} lines
@@ -164,18 +188,18 @@ function HeatmapView({
                       <div>
                         <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
                           Analysis Details
-                          {file.riskLevel && (
+                          {file.risk_level && (
                             <span
-                              className={`text-[10px] px-2 py-0.5 rounded-full capitalize border ${file.riskLevel === "safe"
+                              className={`text-[10px] px-2 py-0.5 rounded-full capitalize border ${file.risk_level === "safe"
                                 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                                : file.riskLevel === "low"
+                                : file.risk_level === "low"
                                   ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                                  : file.riskLevel === "moderate"
+                                  : file.risk_level === "moderate"
                                     ? "bg-orange-100 text-orange-800 border-orange-200"
                                     : "bg-red-100 text-red-800 border-red-200"
                                 }`}
                             >
-                              {file.riskLevel}
+                              {file.risk_level}
                             </span>
                           )}
                         </h3>
@@ -202,14 +226,14 @@ function HeatmapView({
                       </div>
                     )}
 
-                    {file.suggestedCode && (
+                    {file.suggested_code && (
                       <div className="mt-3">
                         <h4 className="text-xs font-semibold text-neutral-900 mb-1">
                           Suggested Code
                         </h4>
                         <div className="relative bg-neutral-900 rounded-md overflow-hidden border border-neutral-800">
                           <pre className="p-3 text-xs text-neutral-300 font-mono overflow-x-auto">
-                            <code>{file.suggestedCode}</code>
+                            <code>{file.suggested_code}</code>
                           </pre>
                         </div>
                       </div>
@@ -230,47 +254,19 @@ function HeatmapView({
 }
 
 export default function HeatmapPage() {
-  const [metric, setMetric] = useState<MetricType>("Complexity");
-  const [data, setData] = useState<HeatmapData[]>([]);
+  const [metric, setMetric] = useState<MetricType>("complexity");
+  const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
 
   useEffect(() => {
     const storageData = localStorage.getItem("code-heatmap-storage-v1");
     if (storageData) {
       try {
         const parsed = JSON.parse(storageData);
-        if (parsed.state && parsed.state.heatmapData) {
-          const loadedData = parsed.state.heatmapData;
-          /*  console.log("Heatmap data from localStorage:", loadedData); */
-
-          let files: any[] = [];
-
-          // Handle various response structures
-          if (loadedData.data && Array.isArray(loadedData.data.files)) {
-            files = loadedData.data.files;
-          } else if (loadedData.files && Array.isArray(loadedData.files)) {
-            files = loadedData.files;
-          } else if (Array.isArray(loadedData)) {
-            files = loadedData;
-          }
-
-          if (files.length > 0) {
-            const transformedData: HeatmapData[] = files.map((f: any) => ({
-              file: f.filename,
-              lines: f.lines,
-              complexity: f.risk,
-              security: f.risk,
-              performance: f.risk,
-              size: f.risk,
-              reason: f.reason,
-              riskLevel: f.risk_level,
-              solution: f.solution,
-              suggestedCode: f.suggested_code,
-            }));
-
-            setData(transformedData);
-          } else {
-            console.warn("Could not find files array in heatmap data:", loadedData);
-          }
+        // Check for the new nested structure first
+        if (parsed.state && parsed.state.heatmapData && parsed.state.heatmapData.data && parsed.state.heatmapData.data.metrics) {
+          setMetricsData(parsed.state.heatmapData.data.metrics);
+        } else {
+          console.warn("Invalid or old heatmap data format:", parsed);
         }
       } catch (error) {
         console.error("Error parsing localStorage data:", error);
@@ -278,9 +274,11 @@ export default function HeatmapPage() {
     }
   }, []);
 
+  const currentFiles = metricsData?.[metric]?.files || [];
+
   return (
     <HeatmapView
-      data={data}
+      files={currentFiles}
       selectedMetric={metric}
       onMetricChange={setMetric}
     />

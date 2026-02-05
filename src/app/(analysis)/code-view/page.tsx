@@ -410,7 +410,7 @@ export default function CodeViewPage() {
     });
   };
 
-  const handleCloseToast = () => {
+  const handleCloseToast = () => { 
     setToast((prev) => ({ ...prev, open: false }));
   };
 
