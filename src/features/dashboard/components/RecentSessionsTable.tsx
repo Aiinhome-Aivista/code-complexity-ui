@@ -136,8 +136,8 @@ export function RecentSessionsTable({
 
           // Fetch Heatmap Data and FileNode Data in background with dynamic IDs
           const heatmapPayload = {
-            project_id:/*  selectedSession.id */155,
-            session_id: /* selectedSession.session_id */"26606241-814d-48ec-8dff-57d17d0375ff",
+            project_id: selectedSession.id,
+            session_id: selectedSession.session_id,
           };
 
           // Heatmap Call
