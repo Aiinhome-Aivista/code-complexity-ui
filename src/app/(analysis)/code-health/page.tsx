@@ -30,11 +30,15 @@ const mockProjectHealth = {
   },
 };
 
+import { useUIStore } from "@/store/uiStore";
+import { Skeleton } from "@mui/material";
+
 export default function CodeHealthAnalysis() {
-  const [results, setResults] = useState<any>(null);
+  const projectResults = useUIStore((state) => state.projectResults);
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
 
-  // Use results if available, otherwise fallback to mock (or empty if you prefer, but fallback is safer for now)
+  // Derive currentHealth from store data
+  const results = projectResults;
   const currentHealth = results?.codeHealth || mockProjectHealth;
   const overallScoreVal = currentHealth.overallScore;
   const overallScore = typeof overallScoreVal === 'object' && overallScoreVal !== null ? overallScoreVal.score : overallScoreVal;
@@ -42,16 +46,33 @@ export default function CodeHealthAnalysis() {
   const ratings = currentHealth.ratings;
   const insights = results?.insights || [];
 
-  useEffect(() => {
-    const storageData = localStorage.getItem("code-heatmap-storage-v1");
-    if (storageData) {
-      const parsedData = JSON.parse(storageData);
-      if (parsedData && parsedData.state && parsedData.state.projectResults) {
-        setResults(parsedData.state.projectResults);
-        /* console.log("results:", parsedData.state.projectResults); */
-      }
-    }
-  }, []);
+  // Loading Logic
+  // If projectResults is null, we assume we are loading or haven't selected a project yet.
+  if (!projectResults) {
+    return (
+      <div className="h-full min-h-screen flex items-center justify-center flex-col gap-4 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+          </span>
+          <span className="text-lg font-medium text-indigo-600 animate-pulse">
+            Analyzing Code Health...
+          </span>
+        </div>
+        <div className="space-y-2 w-64">
+           <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "1rem" }}
+          />
+          <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "0.8rem" }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-500";

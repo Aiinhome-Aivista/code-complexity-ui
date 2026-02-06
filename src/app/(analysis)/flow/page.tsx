@@ -17,6 +17,7 @@ import dagre from "dagre";
 import { useUIStore } from "@/store/uiStore";
 import CustomNode from "./CustomNode";
 import { ViewQuilt } from "@mui/icons-material";
+import { Skeleton } from "@mui/material";
 
 const nodeTypes = {
   custom: CustomNode,
@@ -128,13 +129,28 @@ function Flow() {
 
   if (!flowData || (Array.isArray(flowData) && flowData.length === 0)) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-200 dark:bg-neutral-950 text-neutral-400">
-        <div className="flex flex-col items-center gap-2">
-          <ViewQuilt fontSize="large" className="opacity-50" />
-          <p>No flow data to visualize</p>
+      <div className="h-full flex items-center justify-center flex-col gap-4 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+          </span>
+          <span className="text-lg font-medium text-indigo-600 animate-pulse">
+            Generating Flow...
+          </span>
+        </div>
+        <div className="space-y-2 w-64">
+          <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "1rem" }}
+          />
+          <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "0.8rem" }}
+          />
         </div>
       </div>
-    )
+    );
   }
 
   return (
