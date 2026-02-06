@@ -20,7 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pathname === "/" ||
         pathname === "/home" ||
         pathname === "/login" ||
-        pathname === "/register";
+        pathname === "/register" ||
+        pathname === "/about" ||
+        pathname === "/blog" ||
+        pathname === "/help-center" ||
+        pathname === "/privacy-policy";
 
       if (userData) {
         const parsedUser = JSON.parse(userData);

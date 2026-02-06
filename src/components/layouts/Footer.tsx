@@ -3,7 +3,7 @@ import { BarChart } from "@mui/icons-material";
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-200 flex justify-center py-14">
+    <footer className="bg-white border-t border-gray-200 flex justify-center py-10">
       <div className="container">
         <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-24">
           {/* Brand Column */}
@@ -43,14 +43,6 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="#"
-                    className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
-                  >
-                    Integrations
-                  </Link>
-                </li>
-                <li>
-                  <Link
                     href="#pricing"
                     className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
                   >
@@ -68,7 +60,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 <li>
                   <Link
-                    href="#about"
+                    href="/about"
                     className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
                   >
                     About
@@ -76,18 +68,10 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="#"
+                    href="/blog"
                     className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
                   >
                     Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
-                  >
-                    Careers
                   </Link>
                 </li>
               </ul>
@@ -101,7 +85,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 <li>
                   <Link
-                    href="#"
+                    href="/help-center"
                     className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
                   >
                     Help Center
@@ -109,18 +93,10 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="#"
+                    href="/privacy-policy"
                     className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
                   >
                     Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-neutral-500 hover:text-indigo-600 text-sm transition-colors"
-                  >
-                    Terms of Service
                   </Link>
                 </li>
               </ul>
