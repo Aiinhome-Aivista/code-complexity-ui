@@ -253,26 +253,57 @@ function HeatmapView({
   );
 }
 
+import { useUIStore } from "@/store/uiStore";
+import { Skeleton } from "@mui/material";
+
 export default function HeatmapPage() {
   const [metric, setMetric] = useState<MetricType>("complexity");
-  const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
+  const heatmapData = useUIStore((state) => state.heatmapData);
+  const metricsData = heatmapData?.data?.metrics;
+
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storageData = localStorage.getItem("code-heatmap-storage-v1");
-    if (storageData) {
-      try {
-        const parsed = JSON.parse(storageData);
-        // Check for the new nested structure first
-        if (parsed.state && parsed.state.heatmapData && parsed.state.heatmapData.data && parsed.state.heatmapData.data.metrics) {
-          setMetricsData(parsed.state.heatmapData.data.metrics);
-        } else {
-          console.warn("Invalid or old heatmap data format:", parsed);
-        }
-      } catch (error) {
-        console.error("Error parsing localStorage data:", error);
-      }
+    // Simulate a brief loading state or check against store hydration
+    // Since persist middleware is async in some environments, or just to show the loader if data is missing
+    if (metricsData) {
+        setIsLoading(false);
+    } else {
+        // If no data, we might be loading or just have no data. 
+        // For this task, if we assume data *should* be there or will be fetched:
+        const timer = setTimeout(() => setIsLoading(false), 1000); // Optional: smooth transition
+        return () => clearTimeout(timer);
     }
-  }, []);
+  }, [metricsData]);
+
+  // Simplify: The store might be empty initially. If we are in a session, we expect data.
+  // If we just check !metricsData, it will show loader until data arrives.
+  
+  if (!metricsData) {
+     return (
+      <div className="h-full min-h-screen flex items-center justify-center flex-col gap-4 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+          </span>
+          <span className="text-lg font-medium text-indigo-600 animate-pulse">
+            Generating Heatmap...
+          </span>
+        </div>
+        <div className="space-y-2 w-64">
+          <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "1rem" }}
+          />
+          <Skeleton
+            variant="text"
+            sx={{ bgcolor: "grey.300", fontSize: "0.8rem" }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const currentFiles = metricsData?.[metric]?.files || [];
 

@@ -38,12 +38,6 @@ export default function CodeHealthAnalysis() {
   const currentHealth = results?.codeHealth || mockProjectHealth;
   const overallScoreVal = currentHealth.overallScore;
   const overallScore = typeof overallScoreVal === 'object' && overallScoreVal !== null ? overallScoreVal.score : overallScoreVal;
-  // Map snake_case or whatever keys from JSON to the UI expected keys if needed,
-  // but looking at the JSON, they are mostly compatible except for casing in some places?
-  // Actually, let's just use the keys from currentHealth.ratings directly if possible.
-  // The JSON has: modularity, performance, readability, reliability, security, sizeHealth.
-  // The mock has: readability, modularity, security, reliability, performance, sizeHealth.
-  // They match!
 
   const ratings = currentHealth.ratings;
   const insights = results?.insights || [];
