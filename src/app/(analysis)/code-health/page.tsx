@@ -254,10 +254,6 @@ export default function CodeHealthAnalysis() {
           <div className="space-y-4">
             {(() => {
               const metricData = ratings[selectedMetric];
-              // Handle mock vs real structure
-              // Real: { score, reason, impact, suggestion, affected_files }
-              // Mock: just a number value
-
               if (typeof metricData === "number") {
                 return (
                   <Card className="bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800">
@@ -319,12 +315,12 @@ export default function CodeHealthAnalysis() {
                     <CardContent className="p-0 pb-0">
                       {metricData.affected_files &&
                         metricData.affected_files.length > 0 ? (
-                        <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                        <div className="divide-y divide-neutral-100">
                           {metricData.affected_files.map(
                             (file: string, idx: number) => (
                               <div
                                 key={idx}
-                                className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-400 font-mono flex items-center gap-2 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors"
+                                className="px-4 py-3 text-sm text-neutral-600 font-mono flex items-center gap-2 hover:bg-neutral-50/50 transition-colors"
                               >
                                 <span className="opacity-50 text-xs">
                                   {idx + 1}.

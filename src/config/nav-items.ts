@@ -40,19 +40,20 @@ export const navItems: NavItem[] = [
     href: "/performance",
     icon: "Speed",
   },
-  {
-    title: "Report",
-    href: "/report",
-    icon: "Description",
-  }, */
- /*  {
-    title: "Visualization",
-    href: "/visualization",
-    icon: "ViewQuilt",
-  }, */
+   */
+  /*  {
+     title: "Visualization",
+     href: "/visualization",
+     icon: "ViewQuilt",
+   }, */
   {
     title: "Flow",
     href: "/flow",
     icon: "AccountTree",
+  },
+  {
+    title: "Downloads",
+    href: "/downloads",
+    icon: "Description",
   },
 ];

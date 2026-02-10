@@ -270,7 +270,12 @@ function HeatmapView({
                           <h4 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
                             Suggested Code
                           </h4>
-                          <CopyButton text={file.suggested_code} />
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-500 font-medium">
+                              {(file.suggested_code.match(/\n/g) || []).length + 1} lines
+                            </span>
+                            <CopyButton text={file.suggested_code} />
+                          </div>
                         </div>
                         <div className="relative bg-neutral-900 rounded-md overflow-hidden border border-neutral-800">
                           <pre className="p-3 text-xs text-neutral-300 font-mono overflow-x-auto">

@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
   GET: {
     SESSION_DATATABLE: `${BASE_URL}api/projects`,
     RESULTS: `${BASE_URL}api/results/`,
+    DOWNLOAD_PROJECT: `${BASE_URL}api/download_updated_code`,
   },
   POST: {
     LOGIN: `${BASE_URL}api/auth/login`,

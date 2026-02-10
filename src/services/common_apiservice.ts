@@ -60,4 +60,18 @@ export const commonService = {
       data: payload,
     });
   },
+  downloadProject: async (userId: number | string, sessionId: string): Promise<Blob | null> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.GET.DOWNLOAD_PROJECT}?user_id=${userId}&session_id=${sessionId}`, {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+      return await response.blob();
+    } catch (error) {
+      console.error("Download project error:", error);
+      return null;
+    }
+  },
 };

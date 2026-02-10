@@ -57,6 +57,8 @@ export function UploadModal({
   const [gitBranch, setGitBranch] = useState("");
   const [gitToken, setGitToken] = useState("");
 
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
   useEffect(() => {
     if (isUploading) {
       const texts = [
@@ -97,17 +99,15 @@ export function UploadModal({
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) {
-        // Only support single file zip/folder drop as zip for now or simple file
-        // But logic below was simple file or multiple files count.
-        // Keeping it simple as per previous logic but adapted.
-        // Since we removed folder upload logic explicitly, we might only expect files.
-        // If drag folder, it might come as files list if browser supports it or empty.
-        // Let's assume file drop.
-        const file = files[0];
+        setSelectedFiles(files);
+        const name = files.length === 1
+          ? files[0].name
+          : `${files.length} files (${files.slice(0, 2).map(f => f.name).join(", ")}${files.length > 2 ? ", ..." : ""})`;
+
         setSelectedItem({
-          name: file.name,
+          name,
           type: "file",
-          size: file.size,
+          size: files.reduce((acc, file) => acc + file.size, 0),
         });
       }
     }
@@ -119,12 +119,16 @@ export function UploadModal({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const files = e.target.files;
-      const file = files[0];
+      const files = Array.from(e.target.files);
+      setSelectedFiles(files);
+      const name = files.length === 1
+        ? files[0].name
+        : `${files.length} files (${files.slice(0, 2).map(f => f.name).join(", ")}${files.length > 2 ? ", ..." : ""})`;
+
       setSelectedItem({
-        name: file.name,
+        name,
         type: "file",
-        size: file.size,
+        size: files.reduce((acc, file) => acc + file.size, 0),
       });
     }
   };
@@ -184,8 +188,8 @@ export function UploadModal({
     formData.append("user_id", user.id.toString());
     formData.append("project_name", projectName.trim());
 
-    if (fileInputRef.current?.files?.length) {
-      Array.from(fileInputRef.current.files).forEach((file) => {
+    if (selectedFiles.length > 0) {
+      selectedFiles.forEach((file) => {
         formData.append("files", file);
       });
     }
@@ -243,6 +247,7 @@ export function UploadModal({
   const resetSelection = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     setSelectedItem(null);
+    setSelectedFiles([]);
     setProjectName("");
     setGitUrl("");
     setGitBranch("");
@@ -278,7 +283,7 @@ export function UploadModal({
                 setGitUrl("");
               }}
             >
-              Upload File/ZIP
+              Upload Files
               {uploadMode === "file" && (
                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900 rounded-t-full" />
               )}
@@ -487,7 +492,7 @@ export function UploadModal({
                         }}
                       >
                         <InsertDriveFile className="mr-3 h-5 w-5 text-gray-600" />
-                        <span>Select File/ZIP</span>
+                        <span>Select Files</span>
                       </Button>
                     </div>
                   </div>
