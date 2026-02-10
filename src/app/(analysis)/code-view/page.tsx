@@ -36,6 +36,37 @@ interface FileCodeViewProps {
   exitingIssueIds: Set<string>;
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
+
+  return (
+    <Tooltip title={copied ? "Copied!" : "Copy code"}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-5 w-5 rounded-sm hover:bg-neutral-200 dark:hover:bg-neutral-800"
+        onClick={handleCopy}
+      >
+        {copied ? (
+          <CheckCircle sx={{ fontSize: 12 }} className="text-green-600" />
+        ) : (
+          <Copy sx={{ fontSize: 12 }} className="text-neutral-500" />
+        )}
+      </Button>
+    </Tooltip>
+  );
+}
+
 export function FileCodeView({
   code,
   issues,
@@ -96,7 +127,8 @@ export function FileCodeView({
           </span>
           <Badge
             variant="outline"
-            className="text-xs bg-gray-100 border-neutral-200 text-neutral-600 cursor-pointer hover:bg-gray-200 transition-colors"
+            className={`text-xs border-neutral-200 text-neutral-700 cursor-pointer transition-colors ${issues.length === 0 ? "bg-green-300" : "bg-red-300"
+              }`}
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {issues.length} issues
@@ -155,7 +187,7 @@ export function FileCodeView({
               className="h-8 w-8 p-0 hover:bg-gray-400/20"
               onClick={() => setIsCollapsed(!isCollapsed)}
             >
-              {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+              {isCollapsed ? <ChevronRight className="text-neutral-500" /> : <ChevronLeft className="text-neutral-500" />}
             </Button>
           </Tooltip>
         </div>
@@ -175,164 +207,169 @@ export function FileCodeView({
           ) : (
             <div className="p-4 space-y-4">
               {issues.map((issue) => (
-                <div 
-                  key={issue.id} 
-                  className={`transition-all duration-500 ease-in-out ${
-                    exitingIssueIds.has(issue.id) 
-                      ? "opacity-0 translate-x-full max-h-0 overflow-hidden mb-0" 
-                      : "opacity-100 max-h-[2000px]"
-                  }`}
+                <div
+                  key={issue.id}
+                  className={`transition-all duration-500 ease-in-out ${exitingIssueIds.has(issue.id)
+                    ? "opacity-0 translate-x-full max-h-0 overflow-hidden mb-0"
+                    : "opacity-100 max-h-[2000px]"
+                    }`}
                 >
-                <Card
-                  className={`${getIssueBgColor(
-                    issue.severity,
-                  )} border-l-4 border-t-0 border-r-0 border-b-0 rounded-l-none bg-gray-200 dark:bg-neutral-800 shadow-sm`}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-2">
-                        <div className="mt-0.5">{getIssueIcon(issue.type)}</div>
-                        <div>
-                          <CardTitle className="text-sm text-neutral-900 dark:text-neutral-100 mb-1 leading-snug break-words whitespace-normal">
-                            {issue.message}
-                          </CardTitle>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <Badge
-                              variant={
-                                issue.severity === "high"
-                                  ? "destructive"
-                                  : "secondary"
-                              }
-                              className={`text-[10px] h-5 px-1.5 ${issue.severity === "safe"
-                                ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                : ""
-                                }`}
-                            >
-                              {issue.severity}
-                            </Badge>
-                            <span className="text-xs text-neutral-500">
-                              Line {issue.line}
-                            </span>
+                  <Card
+                    className={`${getIssueBgColor(
+                      issue.severity,
+                    )} border-l-4 border-t-0 border-r-0 border-b-0 rounded-l-none bg-gray-200 dark:bg-neutral-800 shadow-sm`}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-2">
+                          <div className="mt-0.5">{getIssueIcon(issue.type)}</div>
+                          <div>
+                            <CardTitle className="text-sm text-neutral-900 dark:text-neutral-100 mb-1 leading-snug break-words whitespace-normal">
+                              {issue.message}
+                            </CardTitle>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <Badge
+                                variant={
+                                  issue.severity === "high"
+                                    ? "destructive"
+                                    : "secondary"
+                                }
+                                className={`text-[10px] h-5 px-1.5 ${issue.severity === "safe"
+                                  ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                  : ""
+                                  }`}
+                              >
+                                {issue.severity}
+                              </Badge>
+                              <span className="text-xs text-neutral-500">
+                                Line {issue.line}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3 pt-0">
-                    {/* Facts */}
-                    {issue.facts && issue.facts.length > 0 && (
-                      <div>
-                        <h4 className="text-[10px] text-neutral-500 mb-1.5 uppercase tracking-wider font-semibold">
-                          Facts
-                        </h4>
-                        <ul className="space-y-1">
-                          {issue.facts.map((fact, idx) => (
-                            <li
-                              key={idx}
-                              className="text-xs text-neutral-600 dark:text-neutral-400 flex gap-2"
-                            >
-                              <span className="text-neutral-400 dark:text-neutral-600">
-                                •
-                              </span>
-                              <span>{fact}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Rule */}
-                    <div>
-                      <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
-                        Rule Triggered
-                      </h4>
-                      <code className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded font-mono border border-blue-200 dark:border-blue-900/50 break-all whitespace-normal">
-                        {issue.rule}
-                      </code>
-                    </div>
-
-                    {/* Confidence */}
-                    <div>
-                      <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
-                        Confidence
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-blue-500"
-                            style={{ width: `${issue.confidence}%` }}
-                          />
+                    </CardHeader>
+                    <CardContent className="space-y-3 pt-0">
+                      {/* Facts */}
+                      {issue.facts && issue.facts.length > 0 && (
+                        <div>
+                          <h4 className="text-[10px] text-neutral-500 mb-1.5 uppercase tracking-wider font-semibold">
+                            Facts
+                          </h4>
+                          <ul className="space-y-1">
+                            {issue.facts.map((fact, idx) => (
+                              <li
+                                key={idx}
+                                className="text-xs text-neutral-600 dark:text-neutral-400 flex gap-2"
+                              >
+                                <span className="text-neutral-400 dark:text-neutral-600">
+                                  •
+                                </span>
+                                <span>{fact}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
-                          {issue.confidence}%
-                        </span>
-                      </div>
-                    </div>
+                      )}
 
-                    {/* AI Explanation */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
-                          Suggested Explanation
+                      {/* Rule */}
+                      <div>
+                        <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
+                          Rule Triggered
                         </h4>
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] h-4 px-1 border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/10"
+                        <code className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded font-mono border border-blue-200 dark:border-blue-900/50 break-all whitespace-normal">
+                          {issue.rule}
+                        </code>
+                      </div>
+
+                      {/* Confidence */}
+                      <div>
+                        <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
+                          Confidence
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-blue-500"
+                              style={{ width: `${issue.confidence}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
+                            {issue.confidence}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* AI Explanation */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
+                            Suggested Explanation
+                          </h4>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] h-4 px-1 border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/10"
+                          >
+                            AI
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed bg-gray-300 dark:bg-neutral-900/50 p-2.5 rounded border border-neutral-300 dark:border-neutral-800/50">
+                          {issue.explanation}
+                        </p>
+                      </div>
+
+                      {/* Original Snippet */}
+                      {issue.original_snippet && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
+                              Current Code
+                            </h4>
+                            {/* <CopyButton text={issue.original_snippet} /> */}
+                          </div>
+                          <pre className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/10 p-2 rounded border border-red-200 dark:border-red-900/30 whitespace-pre-wrap break-all font-mono overflow-x-hidden">
+                            <code>{issue.original_snippet}</code>
+                          </pre>
+                        </div>
+                      )}
+
+                      {/* Suggested Fix */}
+                      {issue.suggested_fix && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
+                              Suggested Fix
+                            </h4>
+                            <CopyButton text={issue.suggested_fix} />
+                          </div>
+                          <pre className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/10 p-2 rounded border border-green-200 dark:border-green-900/30 whitespace-pre-wrap break-all font-mono overflow-x-hidden">
+                            <code>{issue.suggested_fix}</code>
+                          </pre>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          size="sm"
+                          className="flex-1 h-7 text-xs bg-indigo-600 hover:bg-indigo-700 text-white border-none cursor-pointer font-medium"
+                          onClick={() => onApplyFix(issue)}
+                          disabled={!issue.suggested_fix}
                         >
-                          AI
-                        </Badge>
+                          <CheckCircle sx={{ fontSize: 14 }} className="mr-1.5" />
+                          Apply Fix
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 h-7 text-xs bg-gray-400 hover:bg-gray-500 text-gray-900 border-none cursor-pointer"
+                          onClick={() => onIgnore(issue.id)}
+                        >
+                          <X sx={{ fontSize: 14 }} className="mr-1.5" />
+                          Ignore
+                        </Button>
                       </div>
-                      <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed bg-gray-300 dark:bg-neutral-900/50 p-2.5 rounded border border-neutral-300 dark:border-neutral-800/50">
-                        {issue.explanation}
-                      </p>
-                    </div>
-
-                    {/* Original Snippet */}
-                    {issue.original_snippet && (
-                      <div className="mt-3">
-                        <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
-                          Current Code
-                        </h4>
-                        <pre className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/10 p-2 rounded border border-red-200 dark:border-red-900/30 whitespace-pre-wrap break-all font-mono overflow-x-hidden">
-                          <code>{issue.original_snippet}</code>
-                        </pre>
-                      </div>
-                    )}
-
-                    {/* Suggested Fix */}
-                    {issue.suggested_fix && (
-                      <div className="mt-3">
-                        <h4 className="text-[10px] text-neutral-500 mb-1 uppercase tracking-wider font-semibold">
-                          Suggested Fix
-                        </h4>
-                        <pre className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/10 p-2 rounded border border-green-200 dark:border-green-900/30 whitespace-pre-wrap break-all font-mono overflow-x-hidden">
-                          <code>{issue.suggested_fix}</code>
-                        </pre>
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-1">
-                      <Button
-                        size="sm"
-                        className="flex-1 h-7 text-xs bg-indigo-600 hover:bg-indigo-700 text-white border-none cursor-pointer font-medium"
-                        onClick={() => onApplyFix(issue)}
-                        disabled={!issue.suggested_fix}
-                      >
-                        <CheckCircle sx={{ fontSize: 14 }} className="mr-1.5" />
-                        Apply Fix
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="flex-1 h-7 text-xs bg-gray-400 hover:bg-gray-500 text-gray-900 border-none cursor-pointer"
-                        onClick={() => onIgnore(issue.id)}
-                      >
-                        <X sx={{ fontSize: 14 }} className="mr-1.5" />
-                        Ignore
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
                 </div>
               ))}
             </div>
@@ -446,12 +483,12 @@ export default function CodeViewPage() {
   const handleIgnore = (id: string) => {
     setExitingIssueIds((prev) => new Set(prev).add(id));
     setTimeout(() => {
-        setIssues((prev) => prev.filter((issue) => issue.id !== id));
-        setExitingIssueIds((prev) => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-        });
+      setIssues((prev) => prev.filter((issue) => issue.id !== id));
+      setExitingIssueIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }, 500);
   };
 
@@ -510,29 +547,29 @@ export default function CodeViewPage() {
 
         // 2. Remove the issue permanently from store (persists across reloads)
         if (selectedFileNode?.id) {
-            // Add to exiting set to trigger animation
-            setExitingIssueIds((prev) => new Set(prev).add(issue.id));
-            
-            // Wait for animation (500ms matches CSS duration)
-            setTimeout(() => {
-                useUIStore.getState().removeIssue(selectedFileNode.id, issue.id);
-                setExitingIssueIds((prev) => {
-                    const next = new Set(prev);
-                    next.delete(issue.id);
-                    return next;
-                });
-            }, 500);
+          // Add to exiting set to trigger animation
+          setExitingIssueIds((prev) => new Set(prev).add(issue.id));
+
+          // Wait for animation (500ms matches CSS duration)
+          setTimeout(() => {
+            useUIStore.getState().removeIssue(selectedFileNode.id, issue.id);
+            setExitingIssueIds((prev) => {
+              const next = new Set(prev);
+              next.delete(issue.id);
+              return next;
+            });
+          }, 500);
         } else {
-             // Fallback to local state if node ID is missing using same animation
-             setExitingIssueIds((prev) => new Set(prev).add(issue.id));
-             setTimeout(() => {
-                setIssues((prev) => prev.filter((i) => i.id !== issue.id));
-                setExitingIssueIds((prev) => {
-                    const next = new Set(prev);
-                    next.delete(issue.id);
-                    return next;
-                });
-             }, 500);
+          // Fallback to local state if node ID is missing using same animation
+          setExitingIssueIds((prev) => new Set(prev).add(issue.id));
+          setTimeout(() => {
+            setIssues((prev) => prev.filter((i) => i.id !== issue.id));
+            setExitingIssueIds((prev) => {
+              const next = new Set(prev);
+              next.delete(issue.id);
+              return next;
+            });
+          }, 500);
         }
 
       } else {

@@ -61,7 +61,7 @@ export default function CodeHealthAnalysis() {
           </span>
         </div>
         <div className="space-y-2 w-64">
-           <Skeleton
+          <Skeleton
             variant="text"
             sx={{ bgcolor: "grey.300", fontSize: "1rem" }}
           />
@@ -221,7 +221,7 @@ export default function CodeHealthAnalysis() {
                   {insights.length > 0 ? (
                     <ul className="space-y-3">
                       {insights.map((insight: string, idx: number) => (
-                        <li key={idx} className="flex gap-2 text-sm text-neutral-600 dark:text-neutral-300">
+                        <li key={idx} className="flex gap-2 text-base text-neutral-600 dark:text-neutral-300">
                           <span className="select-none text-blue-500">•</span>
                           {insight}
                         </li>
@@ -242,7 +242,7 @@ export default function CodeHealthAnalysis() {
                   <AlertTriangle className="w-5 h-5 text-indigo-500" />
                   Analysis Summary
                 </h4>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                <p className="text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
                   {(typeof currentHealth.overallScore === 'object' && currentHealth.overallScore?.reason)
                     ? currentHealth.overallScore.reason
                     : "No detailed analysis available for the overall score."}
@@ -278,7 +278,7 @@ export default function CodeHealthAnalysis() {
                           <AlertTriangle className="w-4 h-4 text-amber-500" />
                           Reason
                         </h4>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                        <p className="text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
                           {metricData.reason}
                         </p>
                       </div>
@@ -287,7 +287,7 @@ export default function CodeHealthAnalysis() {
                           <Shield className="w-4 h-4 text-blue-500" />
                           Impact
                         </h4>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                        <p className="text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
                           {metricData.impact}
                         </p>
                       </div>
@@ -296,7 +296,7 @@ export default function CodeHealthAnalysis() {
                           <Zap className="w-4 h-4 text-emerald-500" />
                           Suggestion
                         </h4>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                        <p className="text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
                           {metricData.suggestion}
                         </p>
                       </div>

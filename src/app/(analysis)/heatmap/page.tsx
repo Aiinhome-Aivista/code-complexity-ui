@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@mui/material";
+import { ContentCopy as Copy, CheckCircle } from "@mui/icons-material";
 
 type MetricType = "complexity" | "security" | "performance" | "size";
 
@@ -36,10 +39,45 @@ interface HeatmapResponse {
 }
 
 
+
 interface HeatmapViewProps {
   files: FileData[];
   selectedMetric: MetricType;
   onMetricChange: (metric: MetricType) => void;
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
+
+  return (
+    <Tooltip title={copied ? "Copied!" : "Copy code"}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-5 w-5 rounded-sm hover:bg-neutral-200 dark:hover:bg-neutral-800"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCopy();
+        }}
+      >
+        {copied ? (
+          <CheckCircle sx={{ fontSize: 12 }} className="text-green-600" />
+        ) : (
+          <Copy sx={{ fontSize: 12 }} className="text-neutral-500" />
+        )}
+      </Button>
+    </Tooltip>
+  );
 }
 
 function HeatmapView({
@@ -228,9 +266,12 @@ function HeatmapView({
 
                     {file.suggested_code && (
                       <div className="mt-3">
-                        <h4 className="text-xs font-semibold text-neutral-900 mb-1">
-                          Suggested Code
-                        </h4>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                            Suggested Code
+                          </h4>
+                          <CopyButton text={file.suggested_code} />
+                        </div>
                         <div className="relative bg-neutral-900 rounded-md overflow-hidden border border-neutral-800">
                           <pre className="p-3 text-xs text-neutral-300 font-mono overflow-x-auto">
                             <code>{file.suggested_code}</code>
@@ -267,20 +308,20 @@ export default function HeatmapPage() {
     // Simulate a brief loading state or check against store hydration
     // Since persist middleware is async in some environments, or just to show the loader if data is missing
     if (metricsData) {
-        setIsLoading(false);
+      setIsLoading(false);
     } else {
-        // If no data, we might be loading or just have no data. 
-        // For this task, if we assume data *should* be there or will be fetched:
-        const timer = setTimeout(() => setIsLoading(false), 1000); // Optional: smooth transition
-        return () => clearTimeout(timer);
+      // If no data, we might be loading or just have no data. 
+      // For this task, if we assume data *should* be there or will be fetched:
+      const timer = setTimeout(() => setIsLoading(false), 1000); // Optional: smooth transition
+      return () => clearTimeout(timer);
     }
   }, [metricsData]);
 
   // Simplify: The store might be empty initially. If we are in a session, we expect data.
   // If we just check !metricsData, it will show loader until data arrives.
-  
+
   if (!metricsData) {
-     return (
+    return (
       <div className="h-full min-h-screen flex items-center justify-center flex-col gap-4 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <span className="relative flex h-3 w-3">

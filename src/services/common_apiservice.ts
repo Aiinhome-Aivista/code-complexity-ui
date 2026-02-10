@@ -54,4 +54,10 @@ export const commonService = {
       data: payload,
     });
   },
+  uploadGit: async (payload: { user_id: number | string, project_name: string, repo_url: string, branch: string, token?: string }): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.POST.UPLOAD_GIT, {
+      method: "POST",
+      data: payload,
+    });
+  },
 };

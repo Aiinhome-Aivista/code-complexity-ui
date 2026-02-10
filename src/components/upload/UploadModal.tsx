@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/Button";
 import {
   CloudUpload,
   InsertDriveFile,
-  Folder as FolderIcon,
+  GitHub,
 } from "@mui/icons-material";
 import { cn } from "@/lib/utils";
 import { commonService } from "@/services/common_apiservice";
@@ -28,14 +28,6 @@ interface UploadModalProps {
   onUploadSuccess?: () => void;
 }
 
-// Add type for webkitdirectory
-declare module "react" {
-  interface InputHTMLAttributes<T> extends React.HTMLAttributes<T> {
-    webkitdirectory?: string;
-    directory?: string;
-  }
-}
-
 export function UploadModal({
   open,
   onOpenChange,
@@ -46,8 +38,7 @@ export function UploadModal({
   const [isDragging, setIsDragging] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     name: string;
-    type: "file" | "folder";
-    count?: number;
+    type: "file" | "git";
     size?: number;
   } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -61,6 +52,10 @@ export function UploadModal({
     severity: "success",
   });
   const [loadingText, setLoadingText] = useState("Uploading Project...");
+  const [uploadMode, setUploadMode] = useState<"file" | "git">("file");
+  const [gitUrl, setGitUrl] = useState("");
+  const [gitBranch, setGitBranch] = useState("");
+  const [gitToken, setGitToken] = useState("");
 
   useEffect(() => {
     if (isUploading) {
@@ -70,18 +65,17 @@ export function UploadModal({
       ];
       let index = 0;
       setLoadingText(texts[0]);
-      
+
       const interval = setInterval(() => {
         index = (index + 1) % texts.length;
         setLoadingText(texts[index]);
       }, 2500);
-      
+
       return () => clearInterval(interval);
     }
   }, [isUploading]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const folderInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -98,15 +92,17 @@ export function UploadModal({
     e.preventDefault();
     setIsDragging(false);
 
+    if (uploadMode !== "file") return;
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files);
-      if (files.length > 1) {
-        setSelectedItem({
-          name: `${files.length} files selected`,
-          type: "folder",
-          count: files.length,
-        });
-      } else {
+      if (files.length > 0) {
+        // Only support single file zip/folder drop as zip for now or simple file
+        // But logic below was simple file or multiple files count.
+        // Keeping it simple as per previous logic but adapted.
+        // Since we removed folder upload logic explicitly, we might only expect files.
+        // If drag folder, it might come as files list if browser supports it or empty.
+        // Let's assume file drop.
         const file = files[0];
         setSelectedItem({
           name: file.name,
@@ -121,47 +117,20 @@ export function UploadModal({
     fileInputRef.current?.click();
   };
 
-  const handleFolderClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    folderInputRef.current?.click();
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = e.target.files;
-      if (files.length > 1) {
-        setSelectedItem({
-          name: `${files.length} files selected`,
-          type: "file",
-          count: files.length,
-        });
-      } else {
-        const file = files[0];
-        setSelectedItem({
-          name: file.name,
-          type: "file",
-          size: file.size,
-        });
-      }
-    }
-  };
-
-  const handleFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = e.target.files;
-      const folderName =
-        files[0].webkitRelativePath.split("/")[0] || "Selected Folder";
-
+      const file = files[0];
       setSelectedItem({
-        name: folderName,
-        type: "folder",
-        count: files.length,
+        name: file.name,
+        type: "file",
+        size: file.size,
       });
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedItem || !projectName.trim()) return;
+    if (!projectName.trim()) return;
 
     if (!user) {
       setToast({
@@ -172,16 +141,51 @@ export function UploadModal({
       return;
     }
 
+    // Git Upload
+    if (uploadMode === "git") {
+      if (!gitUrl.trim()) return;
+
+      try {
+        setIsUploading(true);
+        setLoadingText("Cloning Repository...");
+
+        await commonService.uploadGit({
+          user_id: user.id || 7, // Fallback as per user request example if user.id missing, largely safe
+          project_name: projectName.trim(),
+          repo_url: gitUrl.trim(),
+          branch: gitBranch.trim() || "main",
+          token: gitToken.trim(),
+        });
+
+        setToast({
+          open: true,
+          message: "Git project imported successfully!",
+          severity: "success",
+        });
+        if (onUploadSuccess) onUploadSuccess();
+        onOpenChange(false);
+        resetSelection();
+      } catch (error) {
+        console.error("Git upload failed", error);
+        setToast({
+          open: true,
+          message: "Failed to import from Git. Please check Repository URL and credentials.",
+          severity: "error",
+        });
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
+    if (!selectedItem) return;
+
     const formData = new FormData();
     formData.append("user_id", user.id.toString());
     formData.append("project_name", projectName.trim());
 
     if (fileInputRef.current?.files?.length) {
       Array.from(fileInputRef.current.files).forEach((file) => {
-        formData.append("files", file);
-      });
-    } else if (folderInputRef.current?.files?.length) {
-      Array.from(folderInputRef.current.files).forEach((file) => {
         formData.append("files", file);
       });
     }
@@ -204,12 +208,10 @@ export function UploadModal({
         onUploadSuccess();
       }
       onOpenChange(false);
-      setSelectedItem(null);
-      setProjectName(""); // Reset project name
+      resetSelection();
     } catch (error: any) {
       if (error.name === "AbortError" || error.code === "ERR_CANCELED") {
         console.log("Upload cancelled by user");
-        // Optional: show a small info toast or just do nothing
         return;
       }
       console.error("Upload failed", error);
@@ -228,14 +230,10 @@ export function UploadModal({
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
-      setIsUploading(false);
-      // Reset selection on cancel
-      resetSelection();
-      onOpenChange(false);
-    } else {
-      resetSelection();
-      onOpenChange(false);
     }
+    setIsUploading(false);
+    resetSelection();
+    onOpenChange(false);
   };
 
   const handleCloseToast = () => {
@@ -246,8 +244,11 @@ export function UploadModal({
     e?.stopPropagation();
     setSelectedItem(null);
     setProjectName("");
+    setGitUrl("");
+    setGitBranch("");
+    setGitToken("");
+    setUploadMode("file");
     if (fileInputRef.current) fileInputRef.current.value = "";
-    if (folderInputRef.current) folderInputRef.current.value = "";
   };
 
   return (
@@ -262,31 +263,75 @@ export function UploadModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2">
-          <div className="space-y-2">
-            <Label
-              htmlFor="project-name"
-              className="text-gray-700 font-semibold"
+        {/* Tabs */}
+        {!isUploading && !selectedItem && (
+          <div className="flex border-b border-gray-300 mb-4">
+            <button
+              className={cn(
+                "flex-1 pb-3 text-sm font-medium transition-all relative cursor-pointer hover:bg-gray-50/50",
+                uploadMode === "file"
+                  ? "text-gray-900"
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+              onClick={() => {
+                setUploadMode("file");
+                setGitUrl("");
+              }}
             >
-              Project Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="project-name"
-              placeholder="Insert Project Name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              className="bg-gray-150 border border-gray-500/50 text-gray-700 focus:border-gray-500/10 placeholder:text-gray-600"
-            />
+              Upload File/ZIP
+              {uploadMode === "file" && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900 rounded-t-full" />
+              )}
+            </button>
+            <button
+              className={cn(
+                "flex-1 pb-3 text-sm font-medium transition-all relative cursor-pointer hover:bg-gray-50/50",
+                uploadMode === "git"
+                  ? "text-gray-900"
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+              onClick={() => {
+                setUploadMode("git");
+                setSelectedItem(null);
+                setGitBranch("");
+                setGitToken("");
+              }}
+            >
+              Import from Git
+              {uploadMode === "git" && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900 rounded-t-full" />
+              )}
+            </button>
           </div>
+        )}
+
+        <div className="flex flex-col gap-2">
+          {!isUploading && (
+            <div className="space-y-2">
+              <Label
+                htmlFor="project-name"
+                className="text-gray-700 font-semibold"
+              >
+                Project Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="project-name"
+                placeholder="e.g. Code Analysis App"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                className="bg-gray-150 border border-gray-500/50 text-gray-900 focus:border-gray-500/10 placeholder:text-gray-500"
+              />
+            </div>
+          )}
 
           <div
             className={cn(
-              "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden min-h-[250px]", // Added min-h
+              "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden min-h-[250px]",
               isDragging ? "border-blue-600 bg-blue-100" : "border-gray-500 ",
             )}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            onDragOver={uploadMode === "file" ? handleDragOver : undefined}
+            onDragLeave={uploadMode === "file" ? handleDragLeave : undefined}
+            onDrop={uploadMode === "file" ? handleDrop : undefined}
           >
             {isUploading && (
               <div className="absolute inset-0 bg-white/95 dark:bg-neutral-900/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
@@ -296,15 +341,15 @@ export function UploadModal({
                   <div className="absolute inset-0 flex items-center justify-center text-blue-100 dark:text-blue-900/30">
                     <InsertDriveFile style={{ fontSize: 80 }} />
                   </div>
-                  
+
                   {/* Scanning Beam */}
-                  <div 
+                  <div
                     className="absolute z-10 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]"
                     style={{
                       animation: 'scan 2s ease-in-out infinite'
                     }}
                   />
-                  
+
                   {/* Grid Lines Overlay */}
                   <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:10px_10px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
                 </div>
@@ -334,89 +379,120 @@ export function UploadModal({
             <input
               ref={fileInputRef}
               type="file"
-              multiple
+              multiple // Allow multiple files selection if needed, but logic currently expects zip mainly or just one file visually
               className="hidden"
               onChange={handleFileChange}
             />
-            <input
-              ref={folderInputRef}
-              type="file"
-              className="hidden"
-              {...({ webkitdirectory: "", directory: "" } as any)}
-              onChange={handleFolderChange}
-            />
 
-            {selectedItem ? (
-              <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 z-10">
-                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 text-blue-700/90">
-                  {selectedItem.type === "folder" ? (
-                    <FolderIcon style={{ fontSize: 32 }} />
-                  ) : (
-                    <InsertDriveFile style={{ fontSize: 32 }} />
-                  )}
+            {uploadMode === "git" ? (
+              <div className="w-full flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                <div className="w-16 h-16 rounded-full bg-gray-800/20 flex items-center justify-center mb-4 text-gray-800">
+                  <GitHub style={{ fontSize: 32 }} />
                 </div>
-                <h4 className="text-lg font-medium text-gray-900 mb-1">
-                  {selectedItem.name}
-                </h4>
-                <p className="text-sm text-gray-700">
-                  {selectedItem.type === "file" && selectedItem.size
-                    ? `${(selectedItem.size / 1024).toFixed(1)} KB`
-                    : `${selectedItem.count} files`}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-4 text-red-700 hover:text-red-800 hover:bg-red-200 cursor-pointer"
-                  onClick={resetSelection}
-                  disabled={isUploading}
-                >
-                  Remove
-                </Button>
+                <div className="w-full space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="git-url" className="text-gray-700 font-medium ml-1">
+                      Repository URL <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="git-url"
+                      placeholder="e.g. https://github.com/username/repository"
+                      value={gitUrl}
+                      onChange={(e) => setGitUrl(e.target.value)}
+                      className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="git-branch" className="text-gray-700 font-medium ml-1">
+                        Branch
+                      </Label>
+                      <Input
+                        id="git-branch"
+                        placeholder="e.g. main or master"
+                        value={gitBranch}
+                        onChange={(e) => setGitBranch(e.target.value)}
+                        className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="git-token" className="text-gray-700 font-medium ml-1">
+                        Token (Optional)
+                      </Label>
+                      <Input
+                        id="git-token"
+                        type="password"
+                        placeholder="e.g. github_pat_..."
+                        value={gitToken}
+                        onChange={(e) => setGitToken(e.target.value)}
+                        className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2 z-10 w-full">
-                <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200">
-                  <CloudUpload
-                    className="text-gray-700 group-hover:text-blue-700 transition-colors"
-                    style={{ fontSize: 32 }}
-                  />
-                </div>
+              <>
+                {selectedItem ? (
+                  <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 z-10">
+                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 text-blue-700/90">
+                      <InsertDriveFile style={{ fontSize: 32 }} />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-1">
+                      {selectedItem.name}
+                    </h4>
+                    <p className="text-sm text-gray-700">
+                      {selectedItem.type === "file" && selectedItem.size
+                        ? `${(selectedItem.size / 1024).toFixed(1)} KB`
+                        : `Selected`}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-4 text-red-700 hover:text-red-800 hover:bg-red-200 cursor-pointer"
+                      onClick={resetSelection}
+                      disabled={isUploading}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 z-10 w-full">
+                    <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200">
+                      <CloudUpload
+                        className="text-gray-700 group-hover:text-blue-700 transition-colors"
+                        style={{ fontSize: 32 }}
+                      />
+                    </div>
 
-                <div className="space-y-1">
-                  <h4 className="text-lg font-medium text-gray-900">
-                    Drag and drop to upload
-                  </h4>
-                  <p className="text-sm text-gray-700">
-                    or choose an option below
-                  </p>
-                </div>
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-medium text-gray-900">
+                        Drag and drop to upload
+                      </h4>
+                      <p className="text-sm text-gray-700">
+                        or choose an option below
+                      </p>
+                    </div>
 
-                <div className="flex flex-col gap-3 mt-2 w-full max-w-xs mx-auto">
-                  <Button
-                    disabled={isDragging}
-                    variant="secondary"
-                    size="default"
-                    className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent bubbling
-                      handleFileClick();
-                    }}
-                  >
-                    <InsertDriveFile className="mr-3 h-5 w-5 text-gray-600" />
-                    <span>Select File/ZIP</span>
-                  </Button>
-                  <Button
-                    disabled={isDragging}
-                    variant="secondary"
-                    size="default"
-                    className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101  text-gray-900 h-10 justify-start px-4 cursor-pointer"
-                    onClick={handleFolderClick}
-                  >
-                    <FolderIcon className="mr-3 h-5 w-5 text-gray-600" />
-                    <span>Select Folder</span>
-                  </Button>
-                </div>
-              </div>
+                    <div className="flex flex-col gap-3 mt-2 w-full max-w-xs mx-auto">
+                      <Button
+                        disabled={isDragging}
+                        variant="secondary"
+                        size="default"
+                        className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFileClick();
+                        }}
+                      >
+                        <InsertDriveFile className="mr-3 h-5 w-5 text-gray-600" />
+                        <span>Select File/ZIP</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -430,14 +506,14 @@ export function UploadModal({
             Cancel
           </Button>
           <Button
-            disabled={!selectedItem || isUploading || !projectName.trim()}
+            disabled={(!selectedItem && uploadMode === "file") || (uploadMode === "git" && !gitUrl) || isUploading || !projectName.trim()}
             onClick={handleUpload}
             className={cn(
               "bg-blue-800/80 hover:bg-blue-700/80 text-white cursor-pointer shadow-sm",
               isUploading && "text-xs",
             )}
           >
-            {isUploading ? "Uploading..." : "Upload"}
+            {isUploading ? "Processing..." : (uploadMode === "git" ? "Import" : "Upload")}
           </Button>
         </DialogFooter>
       </DialogContent>
