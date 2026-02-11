@@ -496,16 +496,11 @@ export function RecentSessionsTable({
                     key={session.id}
                     sx={{
                       height: "45px", // Explicit height match
-                      bgcolor: "rgb(243, 244, 246)", // gray-200
+                      bgcolor: "rgb(243, 244, 246)",
                       cursor: "pointer",
-                      transition: "all 0.2s ease-in-out",
+                      transition: "all 0.1s ease-in-out",
                       "&:hover": {
-                        bgcolor: "rgb(243, 244, 246) !important", // gray-300
-                        transform: "scale(1.01)",
-                        zIndex: 1,
-                        position: "relative",
-                        boxShadow:
-                          "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                        bgcolor: "rgba(243, 244, 246, 0.1) !important",
                       },
                       borderBottom: "1px solid rgb(209 213 219)", // gray-300
                       "&:last-child td, &:last-child th": { border: 0 },

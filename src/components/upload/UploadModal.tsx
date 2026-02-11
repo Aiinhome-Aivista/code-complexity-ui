@@ -14,6 +14,7 @@ import {
   CloudUpload,
   InsertDriveFile,
   GitHub,
+  DriveFolderUpload,
 } from "@mui/icons-material";
 import { cn } from "@/lib/utils";
 import { commonService } from "@/services/common_apiservice";
@@ -78,6 +79,7 @@ export function UploadModal({
   }, [isUploading]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -115,6 +117,12 @@ export function UploadModal({
 
   const handleFileClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleFolderClick = () => {
+    if (folderInputRef.current) {
+      folderInputRef.current.click();
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,11 +262,12 @@ export function UploadModal({
     setGitToken("");
     setUploadMode("file");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (folderInputRef.current) folderInputRef.current.value = "";
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/80">
+      <DialogContent className="sm:max-w-[500px] sm:w-[500px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/80">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900">
             Upload Project
@@ -270,7 +279,7 @@ export function UploadModal({
 
         {/* Tabs */}
         {!isUploading && !selectedItem && (
-          <div className="flex border-b border-gray-300 mb-4">
+          <div className="flex border-b border-gray-300">
             <button
               className={cn(
                 "flex-1 pb-3 text-sm font-medium transition-all relative cursor-pointer hover:bg-gray-50/50",
@@ -331,7 +340,7 @@ export function UploadModal({
 
           <div
             className={cn(
-              "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden min-h-[250px]",
+              "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden h-[320px]",
               isDragging ? "border-blue-600 bg-blue-100" : "border-gray-500 ",
             )}
             onDragOver={uploadMode === "file" ? handleDragOver : undefined}
@@ -388,59 +397,89 @@ export function UploadModal({
               className="hidden"
               onChange={handleFileChange}
             />
+            <input
+              ref={folderInputRef}
+              type="file"
+              multiple
+              {...({ webkitdirectory: "", directory: "" } as any)}
+              className="hidden"
+              onChange={handleFileChange}
+            />
 
-            {uploadMode === "git" ? (
-              <div className="w-full flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
-                <div className="w-16 h-16 rounded-full bg-gray-800/20 flex items-center justify-center mb-4 text-gray-800">
-                  <GitHub style={{ fontSize: 32 }} />
-                </div>
-                <div className="w-full space-y-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="git-url" className="text-gray-700 font-medium ml-1">
-                      Repository URL <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="git-url"
-                      placeholder="e.g. https://github.com/username/repository"
-                      value={gitUrl}
-                      onChange={(e) => setGitUrl(e.target.value)}
-                      className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
-                    />
+            {/* Content Container */}
+            <div className="relative w-full h-full">
+              {/* Git Upload Section */}
+              <div
+                className={cn(
+                  "absolute inset-0 w-full h-full flex flex-col items-center transition-opacity duration-300 ease-in-out",
+                  uploadMode === "git"
+                    ? "opacity-100 z-10"
+                    : "opacity-0 pointer-events-none z-0"
+                )}
+              >
+                <div className="w-full flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 text-gray-700 transition-transform duration-200">
+                    <GitHub style={{ fontSize: 32 }} />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="w-full space-y-3">
                     <div className="space-y-1">
-                      <Label htmlFor="git-branch" className="text-gray-700 font-medium ml-1">
-                        Branch
+                      <Label htmlFor="git-url" className="text-gray-700 font-medium ml-1">
+                        Repository URL <span className="text-red-500">*</span>
                       </Label>
                       <Input
-                        id="git-branch"
-                        placeholder="e.g. main or master"
-                        value={gitBranch}
-                        onChange={(e) => setGitBranch(e.target.value)}
+                        id="git-url"
+                        placeholder="e.g. https://github.com/username/repository"
+                        value={gitUrl}
+                        onChange={(e) => setGitUrl(e.target.value)}
                         className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
+                        tabIndex={uploadMode === "git" ? 0 : -1}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="git-token" className="text-gray-700 font-medium ml-1">
-                        Token (Optional)
-                      </Label>
-                      <Input
-                        id="git-token"
-                        type="password"
-                        placeholder="e.g. github_pat_..."
-                        value={gitToken}
-                        onChange={(e) => setGitToken(e.target.value)}
-                        className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
-                      />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="git-branch" className="text-gray-700 font-medium ml-1">
+                          Branch
+                        </Label>
+                        <Input
+                          id="git-branch"
+                          placeholder="e.g. main or master"
+                          value={gitBranch}
+                          onChange={(e) => setGitBranch(e.target.value)}
+                          className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
+                          tabIndex={uploadMode === "git" ? 0 : -1}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="git-token" className="text-gray-700 font-medium ml-1">
+                          Token (Optional)
+                        </Label>
+                        <Input
+                          id="git-token"
+                          type="password"
+                          placeholder="e.g. github_pat_..."
+                          value={gitToken}
+                          onChange={(e) => setGitToken(e.target.value)}
+                          className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
+                          tabIndex={uploadMode === "git" ? 0 : -1}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            ) : (
-              <>
+
+              {/* File Upload Section */}
+              <div
+                className={cn(
+                  "absolute inset-0 w-full h-full flex flex-col items-center transition-opacity duration-300 ease-in-out",
+                  uploadMode === "file"
+                    ? "opacity-100 z-10"
+                    : "opacity-0 pointer-events-none z-0"
+                )}
+              >
                 {selectedItem ? (
-                  <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 z-10">
+                  <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 z-10 w-full">
                     <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 text-blue-700/90">
                       <InsertDriveFile style={{ fontSize: 32 }} />
                     </div>
@@ -485,7 +524,7 @@ export function UploadModal({
                         disabled={isDragging}
                         variant="secondary"
                         size="default"
-                        className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer"
+                        className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer relative"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleFileClick();
@@ -494,11 +533,25 @@ export function UploadModal({
                         <InsertDriveFile className="mr-3 h-5 w-5 text-gray-600" />
                         <span>Select Files</span>
                       </Button>
+
+                      <Button
+                        disabled={isDragging}
+                        variant="secondary"
+                        size="default"
+                        className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer relative"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFolderClick();
+                        }}
+                      >
+                        <DriveFolderUpload className="mr-3 h-5 w-5 text-gray-600" />
+                        <span>Select Folder</span>
+                      </Button>
                     </div>
                   </div>
                 )}
-              </>
-            )}
+              </div>
+            </div>
           </div>
         </div>
 
