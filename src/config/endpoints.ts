@@ -1,11 +1,13 @@
-/* export const BASE_URL = "http://122.163.121.176:3034/"; */
 export const BASE_URL = "http://122.163.121.176:3019/";
+/* export const BASE_URL = "http://10.185.166.147:3019/"; */
 
 export const API_ENDPOINTS = {
   GET: {
     SESSION_DATATABLE: `${BASE_URL}api/projects`,
     RESULTS: `${BASE_URL}api/results/`,
     DOWNLOAD_PROJECT: `${BASE_URL}api/download_updated_code`,
+    FETCH_GIT_CONFIG: `${BASE_URL}api/fetch_git_config`,
+    GET_ALL_PLANS: `${BASE_URL}api/plans`,
   },
   POST: {
     LOGIN: `${BASE_URL}api/auth/login`,
@@ -16,6 +18,12 @@ export const API_ENDPOINTS = {
     FILENODE: `${BASE_URL}api/analyze_project_ai`,
     DELETE: `${BASE_URL}api/projects/delete`,
     FLOW: `${BASE_URL}api/relationships_flow`,
-    APPLY_FIX: `${BASE_URL}/api/apply-ai-fix`,
+    APPLY_FIX: `${BASE_URL}api/apply-ai-fix`,
+    GIT_PULL: `${BASE_URL}api/pull`,
+    GIT_PUSH: `${BASE_URL}api/push`,
+    TERMINAL: `${BASE_URL}api/terminal`,
+  },
+  PUT: {
+    UPDATE_GIT_CONFIG: `${BASE_URL}api/update_git_config`,
   },
 } as const;

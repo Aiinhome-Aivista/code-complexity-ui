@@ -273,6 +273,9 @@ export function FileCodeView({
                 </Button>
               </Tooltip>
             )}
+            <Tooltip title="Copy full code">
+              <CopyButton text={code} />
+            </Tooltip>
             <Badge
               variant="outline"
               className={`text-xs border-neutral-200 text-neutral-700 cursor-pointer transition-colors ${issues.length === 0 ? "bg-green-300" : "bg-red-300"

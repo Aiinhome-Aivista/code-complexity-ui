@@ -109,6 +109,7 @@ export function RecentSessionsTable({
   const {
     setProjectResults,
     setHeatmapData,
+    fileNodeData, // Added for logging
     setFileNodeData,
     setActiveProjectName,
     setActiveSessionId,
@@ -164,6 +165,7 @@ export function RecentSessionsTable({
             .getFileNodeData(fileNodePayload)
             .then((fileNodeResponse) => {
               if (fileNodeResponse) {
+                console.log("FileNodeData fetched from API:", fileNodeResponse);
                 setFileNodeData(fileNodeResponse);
               }
             })
@@ -286,6 +288,15 @@ export function RecentSessionsTable({
       fetchSessions();
     }
   }, [refreshTrigger, user]);
+
+  // Log FileNodeData changes
+  useEffect(() => {
+    if (fileNodeData) {
+      console.log("Current FileNodeData in Store:", fileNodeData);
+      const storageState = localStorage.getItem('code-heatmap-storage-v1');
+      console.log("LocalStorage State:", storageState ? JSON.parse(storageState) : "Empty");
+    }
+  }, [fileNodeData]);
 
   const handleRefresh = () => {
     if (user) fetchSessions();

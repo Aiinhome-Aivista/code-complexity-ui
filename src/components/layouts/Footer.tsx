@@ -3,7 +3,7 @@ import { BarChart } from "@mui/icons-material";
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-200 flex justify-center py-10">
+    <footer className="bg-neutral-200 border-t border-gray-300 flex justify-center py-10 px-4 md:px-8">
       <div className="container">
         <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-24">
           {/* Brand Column */}

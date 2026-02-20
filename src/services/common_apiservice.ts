@@ -60,6 +60,41 @@ export const commonService = {
       data: payload,
     });
   },
+  gitPull: async (payload: { user_id: number | string, session_id: string, branch: string }): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.POST.GIT_PULL, {
+      method: "POST",
+      data: payload,
+    });
+  },
+  gitPush: async (payload: { user_id: number | string; session_id: string; message: string; branch: string }): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.POST.GIT_PUSH, {
+      method: "POST",
+      data: payload,
+    });
+  },
+  fetchGitConfig: async (userId: number | string): Promise<any | null> => {
+    return apiservice<any>(`${API_ENDPOINTS.GET.FETCH_GIT_CONFIG}/${userId}`, {
+      method: "GET",
+    });
+  },
+  updateGitConfig: async (
+    userId: number | string,
+    payload: {
+      git_username: string;
+      git_email: string;
+      git_token: string;
+    },
+  ): Promise<any | null> => {
+    return apiservice<any>(`${API_ENDPOINTS.PUT.UPDATE_GIT_CONFIG}/${userId}`, {
+      method: "PUT",
+      data: payload,
+    });
+  },
+  getAllPlans: async (): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.GET.GET_ALL_PLANS, {
+      method: "GET",
+    });
+  },
   downloadProject: async (userId: number | string, sessionId: string): Promise<Blob | null> => {
     try {
       const response = await fetch(`${API_ENDPOINTS.GET.DOWNLOAD_PROJECT}?user_id=${userId}&session_id=${sessionId}`, {
@@ -73,5 +108,19 @@ export const commonService = {
       console.error("Download project error:", error);
       return null;
     }
+  },
+  executeCommand: async (payload: { user_id: number | string; session_id: string; command: string }): Promise<any | null> => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+    const response = await fetch(API_ENDPOINTS.POST.TERMINAL, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    return data;
   },
 };
