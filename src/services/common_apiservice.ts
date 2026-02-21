@@ -95,6 +95,11 @@ export const commonService = {
       method: "GET",
     });
   },
+  getPlansByUser: async (userId: number | string): Promise<any | null> => {
+    return apiservice<any>(`${API_ENDPOINTS.GET.GET_PLANS_BY_USER}/${userId}`, {
+      method: "GET",
+    });
+  },
   downloadProject: async (userId: number | string, sessionId: string): Promise<Blob | null> => {
     try {
       const response = await fetch(`${API_ENDPOINTS.GET.DOWNLOAD_PROJECT}?user_id=${userId}&session_id=${sessionId}`, {

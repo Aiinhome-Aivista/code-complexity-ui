@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/layouts/Header";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { PaymentModalWrapper } from "@/components/providers/PaymentModalWrapper";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,9 +31,25 @@ export default function RootLayout({
             <div className="flex-1 overflow-auto custom-scrollbar">
               {children}
             </div>
+            <PaymentModalWrapper />
           </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
+  );
+}
+
+function GlobalPaymentModalWrapper() {
+  const { isPaymentModalOpen, closePaymentModal } = useAuthStore();
+
+  return (
+    <PaymentModal
+      open={isPaymentModalOpen}
+      onClose={closePaymentModal}
+      onSuccess={(method) => {
+        closePaymentModal();
+        alert(`Payment successful via ${method.toUpperCase()}! You are now a Pro.`);
+      }}
+    />
   );
 }

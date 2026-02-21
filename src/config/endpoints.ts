@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
     DOWNLOAD_PROJECT: `${BASE_URL}api/download_updated_code`,
     FETCH_GIT_CONFIG: `${BASE_URL}api/fetch_git_config`,
     GET_ALL_PLANS: `${BASE_URL}api/plans`,
+    GET_PLANS_BY_USER: `${BASE_URL}/api/plans/user`,
   },
   POST: {
     LOGIN: `${BASE_URL}api/auth/login`,

@@ -7,7 +7,7 @@ import { ArrowForward } from "@mui/icons-material";
 export function DashboardHero() {
   return (
     <div className="relative flex justify-start text-start overflow-hidden rounded-2xl  px-6 mb-8 text-gray-800 animate-fade-in">
-      <div className="relative z-10">
+      <div className="relative">
         <h1 className="text-6xl font-bold tracking-tight  mb-2">
           Intelligent Code Analysis Tool
         </h1>

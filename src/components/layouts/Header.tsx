@@ -87,11 +87,15 @@ function Header() {
               <>
 
                 {isAnalysisPage && (
-                  <div className="flex items-center mr-2">
+                  <div className="flex items-center">
                     <GitDropdown />
                     <TerminalToggle />
+                  </div>
+                )}
+                {(isAnalysisPage || pathname === "/dashboard") && (
+                  <div className="flex items-center mr-2">
                     <OptionsDropdown />
-                    <div className="h-5 w-px bg-neutral-200 mx-1"></div>
+                    {isAnalysisPage && <div className="h-5 w-px bg-neutral-200 mx-1"></div>}
                   </div>
                 )}
               </>

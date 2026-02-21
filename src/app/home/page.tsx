@@ -18,6 +18,7 @@ import { commonService } from "@/services/common_apiservice";
 export default function HomePage() {
   const router = useRouter();
   const [plans, setPlans] = useState<any[]>([]);
+  const { openPaymentModal } = useAuthStore();
 
   useEffect(() => {
     commonService
@@ -116,49 +117,30 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-8 items-start max-w-4xl mx-auto">
             {plans.length > 0 ? (
               plans.map((plan, index) => {
-                const isFree = plan.name.toUpperCase() === "FREE";
-                const isPro = plan.name.toUpperCase() === "PREMIUM";
-                const displayName = isFree ? "Free" : isPro ? "Pro" : plan.name;
-                const displayPrice = `₹${plan.price.toLocaleString()}`;
+                const isFree = plan.price === 0;
 
                 return (
                   <ScrollReveal key={plan.id} delay={index * 200}>
                     <PricingCard
-                      plan={displayName}
-                      price={displayPrice}
-                      desc={isFree ? "For individuals & small projects" : "For professional developers"}
+                      plan={plan.name}
+                      price={`₹${plan.price.toLocaleString()}`}
+                      desc={plan.description}
                       isCurrent={isFree}
-                      isHighlighted={isPro}
+                      isHighlighted={!isFree}
                       features={[
-                        `${plan.max_upload_size}${plan.unit} File Support`,
+                        `${plan.max_upload_size}${plan.Unit || plan.unit || ""} File Support`,
                         plan.git_access ? "Git Support" : "No Git Support",
+                        plan.duration_days ? `${plan.duration_days} Days Validity` : "Lifetime Validity",
                       ]}
+                      onClick={!isFree ? openPaymentModal : undefined}
                     />
                   </ScrollReveal>
                 );
               })
             ) : (
-              // Fallback / Loading Skeleton (or default static)
-              <>
-                <ScrollReveal delay={100}>
-                  <PricingCard
-                    plan="Free"
-                    price="₹0"
-                    desc="For individuals & small projects"
-                    isCurrent={true}
-                    features={["10KB File Support", "No Git Support"]}
-                  />
-                </ScrollReveal>
-                <ScrollReveal delay={300}>
-                  <PricingCard
-                    plan="Pro"
-                    price="₹2,499"
-                    isHighlighted
-                    desc="For professional developers"
-                    features={["10MB File Support", "Git Support"]}
-                  />
-                </ScrollReveal>
-              </>
+              <div className="col-span-1 md:col-span-2 py-12 text-center text-neutral-500">
+                Loading plans...
+              </div>
             )}
           </div>
         </div>
@@ -240,20 +222,23 @@ function PricingCard({
   features,
   isHighlighted,
   isCurrent,
+  onClick,
 }: {
   plan: string;
   price: string;
-  desc: string;
+  desc?: string;
   features: string[];
   isHighlighted?: boolean;
   isCurrent?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <div
-      className={`p-8 rounded-2xl border transition-all duration-500 ease-out relative group overflow-hidden hover:-translate-y-2 hover:scale-[1.02] ${isHighlighted
+      className={`p-8 rounded-2xl border transition-all duration-500 ease-out relative group overflow-hidden ${onClick ? "cursor-pointer" : ""} hover:-translate-y-2 hover:scale-[1.02] ${isHighlighted
         ? "bg-gradient-to-b from-white to-indigo-50/40 shadow-2xl shadow-indigo-900/10 border-indigo-200 ring-4 ring-indigo-50 scale-105 hover:shadow-indigo-500/30"
         : "bg-gray-200/50 border-gray-300 hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-900/10"
         }`}
+      onClick={onClick}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
       {isHighlighted && (
@@ -268,7 +253,7 @@ function PricingCard({
         <span className="text-4xl font-bold text-neutral-900">{price}</span>
         {price !== "Custom" && <span className="text-neutral-500">/mo</span>}
       </div>
-      <p className="text-neutral-500 text-sm mb-6">{desc}</p>
+      {desc && <p className="text-neutral-500 text-sm mb-6">{desc}</p>}
       <ul className="space-y-4 mb-8">
         {features.map((f) => (
           <li
