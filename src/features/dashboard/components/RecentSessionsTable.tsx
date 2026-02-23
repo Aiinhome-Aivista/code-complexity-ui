@@ -31,7 +31,9 @@ import {
   Visibility,
   Delete,
   SearchOff,
+  KeyboardArrowDown,
 } from "@mui/icons-material";
+import { Menu, MenuItem } from "@mui/material";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
@@ -93,6 +95,22 @@ export function RecentSessionsTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Type dropdown
+  const TYPE_OPTIONS = [
+    { label: "All Types", value: "all" },
+    { label: "API Analysis", value: "api_analysis_status" },
+    { label: "Visualization", value: "visualization_status" },
+    { label: "Heatmap", value: "heatmap_status" },
+    { label: "Code Health", value: "code_health_status" },
+    { label: "Relationship Status", value: "relationship_status" },
+  ];
+  const STATUS_OPTIONS = ["All Status", "Done", "Pending", "Failed"];
+
+  const [typeAnchor, setTypeAnchor] = useState<null | HTMLElement>(null);
+  const [statusAnchor, setStatusAnchor] = useState<null | HTMLElement>(null);
+  const [selectedType, setSelectedType] = useState(TYPE_OPTIONS[0]);
+  const [selectedStatus, setSelectedStatus] = useState(STATUS_OPTIONS[0]);
 
   // Delete & Toast State
   const [confirmSnackbarOpen, setConfirmSnackbarOpen] = useState(false);
@@ -302,9 +320,28 @@ export function RecentSessionsTable({
     if (user) fetchSessions();
   };
 
-  const filteredSessions = sessions.filter((session) =>
-    session.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredSessions = sessions.filter((session) => {
+    const matchesSearch = session.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      selectedStatus === "All Status" ||
+      (selectedType.value === "all"
+        ? [
+          session.api_analysis_status,
+          session.visualization_status,
+          session.heatmap_status,
+          session.code_health_status,
+          session.relationship_status,
+        ].some(
+          (s) => s?.toLowerCase() === selectedStatus.toLowerCase(),
+        )
+        : (session[selectedType.value as keyof typeof session] as string)
+          ?.toLowerCase() === selectedStatus.toLowerCase());
+
+    return matchesSearch && matchesStatus;
+  });
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -329,6 +366,7 @@ export function RecentSessionsTable({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          paddingX: 2,
         }}
       >
         <Typography
@@ -347,7 +385,7 @@ export function RecentSessionsTable({
       </Box>
 
       <Card
-        className="p-4 bg-gray-200 dark:bg-neutral-800"
+        className="p-4 bg-gray-200"
         style={{
           borderColor: "var(--card-border)",
           borderWidth: "1px",
@@ -359,19 +397,107 @@ export function RecentSessionsTable({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 3,
             flexWrap: "wrap",
             gap: 2,
           }}
         >
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-gray-300 border-gray-400 text-gray-800 hover:bg-gray-300/80 dark:border-neutral-700 dark:text-neutral-300"
-          >
-            All Sessions
-          </Button>
+          <div className="gap-2 flex">
+            {/* Type Dropdown */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-gray-300 border-gray-400 text-gray-800 hover:bg-gray-300/80 dark:border-neutral-700 dark:text-neutral-300 flex items-center gap-1"
+              onClick={(e) => setTypeAnchor(e.currentTarget)}
+            >
+              {selectedType.label}
+              <KeyboardArrowDown fontSize="small" />
+            </Button>
+            <Menu
+              anchorEl={typeAnchor}
+              open={Boolean(typeAnchor)}
+              onClose={() => setTypeAnchor(null)}
+              PaperProps={{
+                sx: {
+                  bgcolor: "rgb(229 231 235)",
+                  border: "1px solid rgb(156 163 175)",
+                  borderRadius: 1.5,
+                  minWidth: 180,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                },
+              }}
+            >
+              {TYPE_OPTIONS.map((opt) => (
+                <MenuItem
+                  key={opt.value}
+                  selected={selectedType.value === opt.value}
+                  onClick={() => {
+                    setSelectedType(opt);
+                    setTypeAnchor(null);
+                    setPage(0);
+                  }}
+                  sx={{
+                    fontSize: "0.875rem",
+                    color: "#1f2937",
+                    "&.Mui-selected": {
+                      bgcolor: "rgb(209 213 219)",
+                      fontWeight: 600,
+                    },
+                    "&:hover": { bgcolor: "rgb(209 213 219)" },
+                  }}
+                >
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </Menu>
 
+            {/* Status Dropdown */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-gray-300 border-gray-400 text-gray-800 hover:bg-gray-300/80 dark:border-neutral-700 dark:text-neutral-300 flex items-center gap-1"
+              onClick={(e) => setStatusAnchor(e.currentTarget)}
+            >
+              {selectedStatus}
+              <KeyboardArrowDown fontSize="small" />
+            </Button>
+            <Menu
+              anchorEl={statusAnchor}
+              open={Boolean(statusAnchor)}
+              onClose={() => setStatusAnchor(null)}
+              PaperProps={{
+                sx: {
+                  bgcolor: "rgb(229 231 235)",
+                  border: "1px solid rgb(156 163 175)",
+                  borderRadius: 1.5,
+                  minWidth: 140,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                },
+              }}
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <MenuItem
+                  key={opt}
+                  selected={selectedStatus === opt}
+                  onClick={() => {
+                    setSelectedStatus(opt);
+                    setStatusAnchor(null);
+                    setPage(0);
+                  }}
+                  sx={{
+                    fontSize: "0.875rem",
+                    color: "#1f2937",
+                    "&.Mui-selected": {
+                      bgcolor: "rgb(209 213 219)",
+                      fontWeight: 600,
+                    },
+                    "&:hover": { bgcolor: "rgb(209 213 219)" },
+                  }}
+                >
+                  {opt}
+                </MenuItem>
+              ))}
+            </Menu>
+          </div>
           <TextField
             size="small"
             placeholder="Search sessions..."
@@ -416,8 +542,7 @@ export function RecentSessionsTable({
             border: 1,
             borderColor: "rgb(156 163 175)", // gray-400
             borderRadius: 2,
-            width: "99%", // Prevent horizontal scroll on hover scale
-            mx: "auto",
+            width: "100%",
             overflowX: "hidden", // Hide potential overflow
           }}
         >
@@ -711,6 +836,7 @@ export function RecentSessionsTable({
         open={confirmSnackbarOpen}
         onClose={handleCancelDelete}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ zIndex: 9999 }}
       >
         <Alert
           severity="warning"
@@ -755,6 +881,7 @@ export function RecentSessionsTable({
         autoHideDuration={4000}
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ zIndex: 9999 }}
       >
         <Alert
           onClose={handleCloseToast}

@@ -48,7 +48,7 @@ export function DashboardFeatures() {
           <Card className="p-2 bg-gray-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 transition-all duration-300 h-full cursor-default">
             <div className="flex gap-2">
               <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center ${feature.color}`}
+                className={`w-8 h-8 p-2 flex items-center justify-center ${feature.color}`}
               >
                 {feature.icon}
               </div>

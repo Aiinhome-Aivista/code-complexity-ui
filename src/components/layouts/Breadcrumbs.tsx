@@ -9,9 +9,28 @@ export function Breadcrumbs() {
     const pathname = usePathname();
     const { activeProjectName } = useUIStore();
 
-    const isAuthenticated = pathname !== "/home" && pathname !== "/" && pathname !== "/login" && pathname !== "/register";
+    const isAuthPage = pathname === "/login" || pathname === "/register";
 
-    if (!isAuthenticated || pathname === "/home" || pathname === "/") return null;
+    if (pathname === "/home" || pathname === "/") return null;
+
+    // Auth pages: show Home > Login / Register
+    if (isAuthPage) {
+        const pageName = pathname === "/login" ? "Login" : "Register";
+        return (
+            <div className="hidden md:flex items-center gap-1 ml-2 text-sm font-medium text-neutral-500 animate-fade-in">
+                <div className="flex items-center gap-1">
+                    <KeyboardArrowRight sx={{ fontSize: 16 }} className="text-neutral-400" />
+                    <Link href="/home" className="hover:text-indigo-600 transition-colors cursor-pointer">
+                        Home
+                    </Link>
+                </div>
+                <div className="flex items-center gap-1">
+                    <KeyboardArrowRight sx={{ fontSize: 16 }} className="text-neutral-400" />
+                    <span className="text-neutral-800 font-semibold cursor-default">{pageName}</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="hidden md:flex items-center gap-1 ml-2 text-sm font-medium text-neutral-500 animate-fade-in">

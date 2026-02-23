@@ -49,7 +49,7 @@ function DashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-9">
         {/* Left Column - ~75% */}
         <div className="lg:col-span-9 flex flex-col gap-9">
-          <Card className="p-6 bg-gray-200 border-neutral-200 shadow-sm relative overflow-hidden">
+          <Card className="p-6 bg-gray-200 border-neutral-200 shadow-sm relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
             <DashboardHero />
           </Card>

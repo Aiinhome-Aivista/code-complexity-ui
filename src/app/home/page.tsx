@@ -32,15 +32,32 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 text-neutral-800 font-sans">
+    <div className="min-h-screen bg-gray-100 text-neutral-800 font-sans overflow-x-hidden">
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 text-center">
-        <ScrollReveal className="max-w-4xl mx-auto space-y-8">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-neutral-800">
+      <section
+        className="pt-32 pb-20 text-center relative overflow-hidden min-h-[500px]"
+        style={{ width: "100vw", marginLeft: "calc(-50vw + 50%)" }}
+      >
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 z-0"
+          style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.80)" }}
+        >
+          <source src="/home-hero-bg.mp4" type="video/mp4" />
+        </video>
+        {/* Overlay for readability */}
+        <div className="absolute inset-0 bg-black/30 z-[1]" />
+
+        <ScrollReveal className="max-w-4xl mx-auto space-y-8 relative z-10 px-4">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white">
             Intelligent Analysis for <br />
-            <span className="text-indigo-800">Modern Teams</span>
+            <span className="text-indigo-300">Modern Teams</span>
           </h1>
-          <p className="text-xl text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed">
             Stop guessing where your technical debt lies. Get clear, actionable
             insights with our advanced heatmap visualization technology.
           </p>
@@ -199,7 +216,7 @@ function FeatureCard({
   desc: string;
 }) {
   return (
-    <div className="p-8 bg-gray-200/80 backdrop-blur-sm rounded-2xl border border-gray-300 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02] hover:bg-white hover:border-indigo-300 hover:shadow-[0_20px_40px_-15px_rgba(79,70,229,0.3)] group cursor-pointer relative overflow-hidden">
+    <div className="p-8 bg-gray-200/80 backdrop-blur-sm rounded-2xl border border-gray-300 transition-all duration-500 ease-out hover:-translate-y-3 hover:scale-[1.02] hover:bg-white hover:border-indigo-300 hover:shadow-[0_20px_40px_-15px_rgba(79,70,229,0.3)] group relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out" />
       <div className="mb-6 p-4 bg-gray-300 rounded-xl w-fit transition-all duration-500 ease-out group-hover:scale-110 group-hover:-rotate-3 group-hover:bg-indigo-100 group-hover:text-indigo-600 relative z-10 shadow-sm group-hover:shadow-md">{icon}</div>
       <h3 className="text-xl font-bold text-neutral-800 mb-3 transition-colors duration-300 group-hover:text-indigo-900 relative z-10">{title}</h3>

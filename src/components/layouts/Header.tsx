@@ -62,7 +62,7 @@ function Header() {
           </Link>
 
           {/* Breadcrumbs */}
-          {isAuthenticated && <Breadcrumbs />}
+          {(isAuthenticated || isAuthPage) && <Breadcrumbs />}
         </div>
       </div>
 
