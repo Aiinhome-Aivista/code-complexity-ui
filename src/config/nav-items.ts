@@ -10,11 +10,6 @@ export const navItems: NavItem[] = [
   //   href: "/insights",
   //   icon: "Lightbulb",
   // },
-  // {
-  //   title: "Relationship",
-  //   href: "/relationship",
-  //   icon: "Polyline",
-  // },
   {
     title: "Code Health",
     href: "/code-health",
@@ -47,8 +42,8 @@ export const navItems: NavItem[] = [
      icon: "ViewQuilt",
    }, */
   {
-    title: "Flow",
-    href: "/flow",
+    title: "Relationship",
+    href: "/relationship",
     icon: "AccountTree",
   },
   {

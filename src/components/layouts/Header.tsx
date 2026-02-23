@@ -51,7 +51,7 @@ function Header() {
   }, [pathname, setActiveProjectName, setProjectResults, setHeatmapData, setFileNodeData, setFlowData]);
 
   return (
-    <div className="h-full border-b border-neutral-200 flex justify-between items-center px-4 bg-gray-200 backdrop-blur-sm transition-colors duration-300 z-500">
+    <div className="h-full border-b border-neutral-200 flex justify-between shadow-md items-center px-8 bg-gray-200 backdrop-blur-sm transition-colors duration-300 z-[5000]">
       <div className="flex text-neutral-900 gap-8 items-center">
         <div className="flex gap-2 items-center">
           <Link href={logoLink} className="flex gap-2 items-center cursor-pointer">
@@ -100,13 +100,13 @@ function Header() {
                 )}
               </>
             ) : (
-              <Link href="/login">
+              <Link href="/register">
                 <Button
                   className="bg-indigo-700 hover:bg-indigo-800 text-white shadow-lg shadow-indigo-900/20 gap-2 transition-all hover:scale-105"
                   size="sm"
                 >
                   <LoginIcon sx={{ fontSize: 18 }} />
-                  Login
+                  Signup For Free
                 </Button>
               </Link>
             )}

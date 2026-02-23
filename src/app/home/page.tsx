@@ -114,29 +114,22 @@ export default function HomePage() {
             </p>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 gap-8 items-start max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 items-stretch max-w-4xl mx-auto">
             {plans.length > 0 ? (
-              plans.map((plan, index) => {
-                const isFree = plan.price === 0;
-
-                return (
-                  <ScrollReveal key={plan.id} delay={index * 200}>
-                    <PricingCard
-                      plan={plan.name}
-                      price={`₹${plan.price.toLocaleString()}`}
-                      desc={plan.description}
-                      isCurrent={isFree}
-                      isHighlighted={!isFree}
-                      features={[
-                        `${plan.max_upload_size}${plan.Unit || plan.unit || ""} File Support`,
-                        plan.git_access ? "Git Support" : "No Git Support",
-                        plan.duration_days ? `${plan.duration_days} Days Validity` : "Lifetime Validity",
-                      ]}
-                      onClick={!isFree ? openPaymentModal : undefined}
-                    />
-                  </ScrollReveal>
-                );
-              })
+              plans.map((plan, index) => (
+                <ScrollReveal key={plan.id} delay={index * 200}>
+                  <PricingCard
+                    plan={plan.name}
+                    price={`₹${plan.price.toLocaleString()}`}
+                    desc={plan.description}
+                    features={[
+                      `${plan.max_upload_size}${plan.Unit || plan.unit || ""} File Support`,
+                      plan.git_access ? "Git Support" : "No Git Support",
+                      plan.duration_days ? `${plan.duration_days} Days Validity` : "Lifetime Validity",
+                    ]}
+                  />
+                </ScrollReveal>
+              ))
             ) : (
               <div className="col-span-1 md:col-span-2 py-12 text-center text-neutral-500">
                 Loading plans...
@@ -220,63 +213,28 @@ function PricingCard({
   price,
   desc,
   features,
-  isHighlighted,
-  isCurrent,
-  onClick,
 }: {
   plan: string;
   price: string;
   desc?: string;
   features: string[];
-  isHighlighted?: boolean;
-  isCurrent?: boolean;
-  onClick?: () => void;
 }) {
   return (
-    <div
-      className={`p-8 rounded-2xl border transition-all duration-500 ease-out relative group overflow-hidden ${onClick ? "cursor-pointer" : ""} hover:-translate-y-2 hover:scale-[1.02] ${isHighlighted
-        ? "bg-gradient-to-b from-white to-indigo-50/40 shadow-2xl shadow-indigo-900/10 border-indigo-200 ring-4 ring-indigo-50 scale-105 hover:shadow-indigo-500/30"
-        : "bg-gray-200/50 border-gray-300 hover:bg-white hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-900/10"
-        }`}
-      onClick={onClick}
-    >
-      <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-      {isHighlighted && (
-        <div className="absolute top-0 right-0 z-10">
-          <div className="bg-gradient-to-bl from-indigo-600 to-violet-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-sm">
-            RECOMMENDED
-          </div>
-        </div>
-      )}
+    <div className="h-full p-8 rounded-2xl border bg-white/70 border-gray-200 shadow-lg shadow-indigo-900/5 hover:shadow-xl hover:shadow-indigo-900/10 hover:-translate-y-1 transition-all duration-300 ease-out">
       <h3 className="text-xl font-bold text-neutral-800 mb-2">{plan}</h3>
       <div className="flex items-baseline gap-1 mb-2">
         <span className="text-4xl font-bold text-neutral-900">{price}</span>
-        {price !== "Custom" && <span className="text-neutral-500">/mo</span>}
+        <span className="text-neutral-500">/mo</span>
       </div>
       {desc && <p className="text-neutral-500 text-sm mb-6">{desc}</p>}
-      <ul className="space-y-4 mb-8">
+      <ul className="space-y-3">
         {features.map((f) => (
-          <li
-            key={f}
-            className="flex items-center gap-3 text-sm text-neutral-700"
-          >
-            <Check className="text-indigo-600 h-5 w-5" />
+          <li key={f} className="flex items-center gap-3 text-sm text-neutral-700">
+            <Check className="text-indigo-600 h-5 w-5 shrink-0" />
             {f}
           </li>
         ))}
       </ul>
-      <Button
-        variant={isHighlighted ? "default" : "outline"}
-        className={`w-full h-11 text-sm font-semibold tracking-wide transition-all duration-300 ease-out group-hover:shadow-lg ${isHighlighted
-          ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 border-0 hover:scale-[1.02]"
-          : isCurrent
-            ? "bg-neutral-200/80 text-neutral-500 border-neutral-300 cursor-not-allowed shadow-none"
-            : "border-neutral-300 bg-white text-neutral-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-400 group-hover:bg-indigo-50 group-hover:text-indigo-700 group-hover:border-indigo-300"
-          }`}
-        disabled={isCurrent}
-      >
-        {isCurrent ? "Current Plan" : `Choose ${plan}`}
-      </Button>
     </div>
   );
 }
