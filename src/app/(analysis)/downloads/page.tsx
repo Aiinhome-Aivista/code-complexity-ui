@@ -126,7 +126,13 @@ export default function DownloadsPage() {
           </CardContent>
         </Card>
 
-        {/* Reports Card */}
+
+      </div>
+    </div>
+  );
+}
+
+/* 
         <Card className=" bg-neutral-100 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800 shadow-sm flex flex-col">
           <CardHeader>
             <CardTitle className="text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
@@ -160,8 +166,4 @@ export default function DownloadsPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
+        </Card> */
