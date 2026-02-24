@@ -46,9 +46,9 @@ export const navItems: NavItem[] = [
     href: "/relationship",
     icon: "AccountTree",
   },
-  {
-    title: "Downloads",
-    href: "/downloads",
-    icon: "Description",
-  },
+  /*  {
+     title: "Downloads",
+     href: "/downloads",
+     icon: "Description",
+   }, */
 ];
