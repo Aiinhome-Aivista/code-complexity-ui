@@ -5,8 +5,8 @@ import Footer from "@/components/layouts/Footer";
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-100 text-neutral-800 font-sans">
-      <div className="pt-32 pb-12 px-4 bg-white border-b border-neutral-200">
-        <div className="max-w-3xl mx-auto">
+      <div className="pt-32 pb-12 px-8 bg-white border-b border-neutral-200">
+        <div className="max-w-3xl px-8">
              <span className="text-indigo-600 font-bold tracking-wider text-sm uppercase mb-2 block animate-fade-in">Legal Documentation</span>
              <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-4 animate-fade-in">Privacy Policy</h1>
              <p className="text-neutral-500 animate-fade-in">Effective Date: February 6, 2026</p>

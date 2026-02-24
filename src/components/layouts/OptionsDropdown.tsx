@@ -16,12 +16,13 @@ import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/store/authStore";
 import { commonService } from "@/services/common_apiservice";
 import { useRouter } from "next/navigation";
-import { UpgradePlanPanel } from "@/features/subscription/UpgradePlanPanel";
+import { UpgradePlanModal } from "@/features/subscription/UpgradePlanModal";
 
 export function OptionsDropdown() {
     const { user, logout, openPaymentModal } = useAuthStore();
     const [isOpen, setIsOpen] = useState(false);
-    const [activeSubmenu, setActiveSubmenu] = useState<"none" | "plan" | "git">("none");
+    const [activeSubmenu, setActiveSubmenu] = useState<"none" | "git">("none");
+    const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
     const [gitConfig, setGitConfig] = useState({ username: "", email: "", pat: "" });
     const [showPat, setShowPat] = useState(false);
     const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -135,9 +136,10 @@ export function OptionsDropdown() {
                         <div
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setActiveSubmenu(activeSubmenu === "plan" ? "none" : "plan");
+                                setIsOpen(false);
+                                setIsPlanModalOpen(true);
                             }}
-                            className={`mt-1 pl-7 text-xs font-semibold cursor-pointer transition-colors ${activeSubmenu === "plan" ? "text-indigo-800" : "text-indigo-600 hover:text-indigo-800"}`}
+                            className="mt-1 pl-7 text-xs font-semibold cursor-pointer transition-colors text-indigo-600 hover:text-indigo-800"
                         >
                             {planData.current_tier === "FREE" ? "Upgrade Plan" : "View Current Plan"}
                         </div>
@@ -182,15 +184,7 @@ export function OptionsDropdown() {
                         </div>
                     </div>
 
-                    {/* Plan Upgrade Panel */}
-                    {activeSubmenu === "plan" && (
-                        <UpgradePlanPanel
-                            plans={planData.plans}
-                            currentTier={planData.current_tier || "FREE"}
-                            isLoading={isLoadingPlans}
-                            onUpgradeClick={openPaymentModal}
-                        />
-                    )}
+
 
                     {/* Git Config Panel */}
                     {activeSubmenu === "git" && (
@@ -267,6 +261,16 @@ export function OptionsDropdown() {
                 </div>,
                 document.body
             )}
+
+            {/* Upgrade Plan Modal */}
+            <UpgradePlanModal
+                open={isPlanModalOpen}
+                onClose={() => setIsPlanModalOpen(false)}
+                plans={planData.plans}
+                currentTier={planData.current_tier || "FREE"}
+                isLoading={isLoadingPlans}
+                onUpgradeClick={openPaymentModal}
+            />
 
             {/* Snackbar */}
             <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
