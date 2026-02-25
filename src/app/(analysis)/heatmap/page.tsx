@@ -126,7 +126,7 @@ function HeatmapView({
         </div>
 
         {/* Metric Selector Tabs */}
-        <div className="flex p-1 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 w-fit">
+       {/*  <div className="flex p-1 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 w-fit">
           {metrics.map((m) => (
             <button
               key={m.id}
@@ -142,7 +142,7 @@ function HeatmapView({
               {m.label}
             </button>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {/* Legend Card */}
