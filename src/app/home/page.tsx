@@ -32,10 +32,10 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 text-neutral-800 font-sans overflow-x-hidden">
+    <div className="h-[calc(100%+4rem)] overflow-y-auto bg-gray-100 text-neutral-800 font-sans overflow-x-hidden home-scrollbar -mt-16">
       {/* Hero Section */}
       <section
-        className="pt-32 pb-20 text-center relative overflow-hidden min-h-[500px]"
+        className="pt-32 pb-20 text-center relative overflow-hidden min-h-screen"
         style={{ width: "100vw", marginLeft: "calc(-50vw + 50%)" }}
       >
         {/* Video Background */}
@@ -50,14 +50,14 @@ export default function HomePage() {
           <source src="/home-hero-bg.mp4" type="video/mp4" />
         </video>
         {/* Overlay for readability */}
-        <div className="absolute inset-0 bg-black/30 z-[1]" />
+        <div className="absolute inset-0 bg-black/40 z-[1]" />
 
-        <ScrollReveal className="max-w-4xl mx-auto space-y-8 relative z-10 px-4">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white">
-            Intelligent Analysis for <br />
-            <span className="text-indigo-300">Modern Teams</span>
+        <ScrollReveal className="max-w-4xl mx-auto space-y-8 relative z-10 px-4 opacity-90">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white drop-shadow-md">
+            Intelligent <span className="text-indigo-300">Analysis</span> for <br />
+            Modern Teams
           </h1>
-          <p className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             Stop guessing where your technical debt lies. Get clear, actionable
             insights with our advanced heatmap visualization technology.
           </p>

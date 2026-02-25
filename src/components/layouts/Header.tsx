@@ -51,67 +51,69 @@ function Header() {
   }, [pathname, setActiveProjectName, setProjectResults, setHeatmapData, setFileNodeData, setFlowData]);
 
   return (
-    <div className="h-full border-b border-neutral-200 flex justify-between shadow-md items-center px-8 bg-gray-200 backdrop-blur-sm transition-colors duration-300 z-[5000]">
-      <div className="flex text-neutral-900 gap-8 items-center">
-        <div className="flex gap-2 items-center">
-          <Link href={logoLink} className="flex gap-2 items-center cursor-pointer">
-            <div className="bg-indigo-700 text-white text-xl font-bold p-1.5 rounded-xl shadow-lg shadow-indigo-900/10">
-              CQ
-            </div>
-            <h3 className="text-xl font-bold tracking-tight">CodeQuality</h3>
-          </Link>
-
-          {/* Breadcrumbs */}
-          {(isAuthenticated || isAuthPage) && <Breadcrumbs />}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-8">
-        {isHomePage && (
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-base font-semibold text-neutral-600 hover:text-indigo-700 transition-colors" onClick={(e) => { e.preventDefault(); document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }); }}>
-              Features
+    <div className={`h-full border-b flex justify-center shadow-md transition-colors duration-300 z-[5000] px-8 ${isHomePage ? "bg-gray-200/60 backdrop-blur-xl border-white/20" : "bg-gray-200 backdrop-blur-sm border-neutral-200"}`}>
+      <div className="container flex justify-between items-center h-full w-full">
+        <div className="flex text-neutral-900 gap-8 items-center">
+          <div className="flex gap-2 items-center">
+            <Link href={logoLink} className="flex gap-2 items-center cursor-pointer">
+              <div className="bg-indigo-700 text-white text-xl font-bold p-1.5 rounded-xl shadow-lg shadow-indigo-900/10">
+                CQ
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">CodeQuality</h3>
             </Link>
-            <Link href="#pricing" className="text-base font-semibold text-neutral-600 hover:text-indigo-700 transition-colors" onClick={(e) => { e.preventDefault(); document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }); }}>
-              Pricing
-            </Link>
-            <Link href="#about" className="text-base font-semibold text-neutral-600 hover:text-indigo-700 transition-colors" onClick={(e) => { e.preventDefault(); document.getElementById("about")?.scrollIntoView({ behavior: "smooth" }); }}>
-              About
-            </Link>
-          </nav>
-        )}
 
-        {!isAuthPage && (
-          <div className="flex items-center relative">
-            {isAuthenticated ? (
-              <>
-
-                {isAnalysisPage && (
-                  <div className="flex items-center">
-                    <GitDropdown />
-                    <TerminalToggle />
-                  </div>
-                )}
-                {(isAnalysisPage || pathname === "/dashboard") && (
-                  <div className="flex items-center mr-2">
-                    <OptionsDropdown />
-                    {isAnalysisPage && <div className="h-5 w-px bg-neutral-200 mx-1"></div>}
-                  </div>
-                )}
-              </>
-            ) : (
-              <Link href="/register">
-                <Button
-                  className="bg-indigo-700 hover:bg-indigo-800 text-white shadow-lg shadow-indigo-900/20 gap-2 transition-all hover:scale-105"
-                  size="sm"
-                >
-                  <LoginIcon sx={{ fontSize: 18 }} />
-                  Signup For Free
-                </Button>
-              </Link>
-            )}
+            {/* Breadcrumbs */}
+            {(isAuthenticated || isAuthPage) && <Breadcrumbs />}
           </div>
-        )}
+        </div>
+
+        <div className="flex items-center gap-8">
+          {isHomePage && (
+            <nav className="hidden md:flex items-center gap-8">
+              <Link href="#features" className="text-base font-semibold text-neutral-600 hover:text-indigo-700 transition-colors" onClick={(e) => { e.preventDefault(); document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }); }}>
+                Features
+              </Link>
+              <Link href="#pricing" className="text-base font-semibold text-neutral-600 hover:text-indigo-700 transition-colors" onClick={(e) => { e.preventDefault(); document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }); }}>
+                Pricing
+              </Link>
+              <Link href="#about" className="text-base font-semibold text-neutral-600 hover:text-indigo-700 transition-colors" onClick={(e) => { e.preventDefault(); document.getElementById("about")?.scrollIntoView({ behavior: "smooth" }); }}>
+                About
+              </Link>
+            </nav>
+          )}
+
+          {!isAuthPage && (
+            <div className="flex items-center relative">
+              {isAuthenticated ? (
+                <>
+
+                  {isAnalysisPage && (
+                    <div className="flex items-center">
+                      {/* <GitDropdown /> */}
+                      <TerminalToggle />
+                    </div>
+                  )}
+                  {(isAnalysisPage || pathname === "/dashboard") && (
+                    <div className="flex items-center mr-2">
+                      <OptionsDropdown />
+                      {isAnalysisPage && <div className="h-5 w-px bg-neutral-200 mx-1"></div>}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link href="/register">
+                  <Button
+                    className="bg-indigo-700 hover:bg-indigo-800 text-white shadow-lg shadow-indigo-900/20 gap-2 transition-all hover:scale-105"
+                    size="sm"
+                  >
+                    <LoginIcon sx={{ fontSize: 18 }} />
+                    Signup For Free
+                  </Button>
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

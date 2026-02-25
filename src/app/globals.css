@@ -10,20 +10,28 @@
 
 @layer base {
   :root {
-    --background: #f3f4f6; /* light gray */
+    --background: #f3f4f6;
+    /* light gray */
     --foreground: #0a0a0a;
 
     /* Table / Card Theme Variables - Light */
-    --card-bg: #ffffff; /* white cards on gray bg */
-    --card-border: #e5e7eb; /* gray-200 */
-    --table-header-bg: #f9fafb !important; /* gray-50 */
+    --card-bg: #ffffff;
+    /* white cards on gray bg */
+    --card-border: #e5e7eb;
+    /* gray-200 */
+    --table-header-bg: #f9fafb !important;
+    /* gray-50 */
     --table-border: #e5e7eb !important;
     --row-hover: #f9fafb !important;
     --row-alt: #ffffff !important;
-    --text-primary: #111827; /* gray-900 */
-    --text-secondary: #6b7280; /* gray-500 */
-    --primary-main: #4338ca; /* indigo-700 */
-    --danger-main: #ef4444; /* red-500 */
+    --text-primary: #111827;
+    /* gray-900 */
+    --text-secondary: #6b7280;
+    /* gray-500 */
+    --primary-main: #4338ca;
+    /* indigo-700 */
+    --danger-main: #ef4444;
+    /* red-500 */
   }
 }
 
@@ -43,10 +51,23 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Hide number input spin buttons */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  /* Firefox */
+}
+
 /* Custom Scrollbar Styles */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #262626 transparent; /* neutral-800 transparent */
+  scrollbar-color: #262626 transparent;
+  /* neutral-800 transparent */
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -58,19 +79,36 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #262626; /* neutral-800 */
+  background: #262626;
+  /* neutral-800 */
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #404040; /* neutral-700 */
+  background: #404040;
+  /* neutral-700 */
+}
+
+/* Home Page Scrollbar - Hidden */
+.home-scrollbar {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
+}
+
+.home-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -81,6 +119,7 @@ body {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -91,10 +130,21 @@ body {
   animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
 
 .css-1toxriw-MuiList-root-MuiMenu-list {
   list-style: none;

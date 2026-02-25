@@ -3,7 +3,7 @@ import { BarChart } from "@mui/icons-material";
 
 export default function Footer() {
   return (
-    <footer className="bg-neutral-200 border-t border-gray-300 flex justify-center py-10 px-4 md:px-8">
+    <footer className="bg-neutral-200 border-t border-gray-300 flex justify-center py-10 px-8">
       <div className="container">
         <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-24">
           {/* Brand Column */}
@@ -13,7 +13,7 @@ export default function Footer() {
                 CV
               </div>
               <span className="text-xl font-bold text-neutral-900">
-                CodeView
+                CodeQuality
               </span>
             </div>
             <p className="text-neutral-500 text-sm leading-relaxed">
@@ -21,7 +21,7 @@ export default function Footer() {
               technical overhead.
             </p>
             <p className="text-neutral-400 text-sm">
-              © 2026 CodeView Inc.
+              © 2026 CodeQuality Inc.
             </p>
           </div>
 

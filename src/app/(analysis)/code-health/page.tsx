@@ -258,7 +258,7 @@ export default function CodeHealthAnalysis() {
                 return (
                   <Card className="bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800">
                     <CardContent className="p-6 text-center text-neutral-500">
-                      Detailed breakdown not available for mock data.
+                      Detailed breakdown not available.
                     </CardContent>
                   </Card>
                 );

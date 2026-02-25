@@ -4,26 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowForward } from "@mui/icons-material";
-import { Snackbar, Alert } from "@mui/material";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { authService } from "@/services/auth_apiservice";
+import { useUIStore } from "@/store/uiStore";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "warning",
-  });
-
-  const showToast = (
-    message: string,
-    severity: "success" | "error" | "warning"
-  ) => setToast({ open: true, message, severity });
+  const { showSnackbar } = useUIStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +27,7 @@ export default function RegisterPage() {
     const confirmPassword = formData.get("confirmPassword") as string;
 
     if (password !== confirmPassword) {
-      showToast("Passwords do not match", "warning");
+      showSnackbar("Passwords do not match", "warning");
       setIsLoading(false);
       return;
     }
@@ -45,18 +36,18 @@ export default function RegisterPage() {
       const response = await authService.register({ name, email, password });
 
       if (response && response.isSuccess) {
-        showToast(
+        showSnackbar(
           response.message || "Registration successful! Please login.",
           "success"
         );
         // Delay redirect so user can read the message
         setTimeout(() => router.push("/login"), 2500);
       } else {
-        showToast(response?.message || "Registration failed", "error");
+        showSnackbar(response?.message || "Registration failed", "error");
       }
     } catch (error) {
       console.error("Registration error:", error);
-      showToast(
+      showSnackbar(
         (error as Error).message || "An error occurred during registration",
         "error"
       );
@@ -148,23 +139,6 @@ export default function RegisterPage() {
           </Link>
         </div>
       </Card>
-
-      {/* Toast Notification */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ width: "100%", borderRadius: 2 }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }

@@ -11,12 +11,14 @@ import ReactFlow, {
   Node,
   Edge,
   ReactFlowProvider,
+  Panel,
+  useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import dagre from "dagre";
 import { useUIStore } from "@/store/uiStore";
 import CustomNode from "./CustomNode";
-import { ViewQuilt } from "@mui/icons-material";
+import { ViewQuilt, Refresh } from "@mui/icons-material";
 import { Skeleton } from "@mui/material";
 
 const nodeTypes = {
@@ -27,10 +29,11 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  const nodeWidth = 320; // Card width + gap
-  const nodeHeight = 100; // Approximate card height
+  const nodeWidth = 350; // Increased card width + gap
+  const nodeHeight = 150; // Increased Approximate card height
 
-  dagreGraph.setGraph({ rankdir: "LR" }); // Left-to-Right layout
+  // Left-to-Right layout with more space horizontally and vertically
+  dagreGraph.setGraph({ rankdir: "LR", ranksep: 100, nodesep: 50 });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -63,6 +66,19 @@ function Flow() {
   const { flowData } = useUIStore();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const { fitView } = useReactFlow();
+
+  const handleRearrange = useCallback(() => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes,
+      edges
+    );
+    setNodes(layoutedNodes as any);
+    setEdges(layoutedEdges);
+    setTimeout(() => {
+      fitView({ duration: 800 });
+    }, 50);
+  }, [nodes, edges, setNodes, setEdges, fitView]);
 
   useEffect(() => {
     if (!flowData) return;
@@ -168,6 +184,15 @@ function Flow() {
       >
         <Controls className="!bg-white dark:!bg-neutral-800 !border-neutral-200 dark:!border-neutral-700 !fill-neutral-500" />
         <Background color="#94a3b8" gap={16} size={1} className="opacity-20" />
+        <Panel position="top-right">
+          <button
+            onClick={handleRearrange}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-300 rounded-md border border-neutral-300 dark:border-neutral-700 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+          >
+            <Refresh sx={{ fontSize: 18 }} />
+            Autoload
+          </button>
+        </Panel>
       </ReactFlow>
     </div>
   );

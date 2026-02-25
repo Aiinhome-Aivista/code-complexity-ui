@@ -117,11 +117,6 @@ export function RecentSessionsTable({
   const [deleteTargetId, setDeleteTargetId] = useState<number | string | null>(
     null,
   );
-  const [toast, setToast] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
 
   const router = useRouter();
   const {
@@ -132,6 +127,7 @@ export function RecentSessionsTable({
     setActiveProjectName,
     setActiveSessionId,
     setFlowData,
+    showSnackbar,
   } = useUIStore();
   const {
     sessions,
@@ -237,27 +233,16 @@ export function RecentSessionsTable({
 
     try {
       await commonService.deleteProject(targetId);
-      setToast({
-        open: true,
-        message: "Session deleted successfully",
-        severity: "success",
-      });
+      showSnackbar("Session deleted successfully", "success");
       if (user) fetchSessions();
     } catch (error) {
       console.error("Error deleting session:", error);
-      setToast({
-        open: true,
-        message: "Failed to delete session",
-        severity: "error",
-      });
+      showSnackbar("Failed to delete session", "error");
     } finally {
       setDeleteTargetId(null);
     }
   };
 
-  const handleCloseToast = () => {
-    setToast({ ...toast, open: false });
-  };
 
   const fetchSessions = async (search?: string, status?: string) => {
     if (!user) return; // Wait for user to be loaded
@@ -271,25 +256,13 @@ export function RecentSessionsTable({
       );
       if (response?.isSuccess) {
         setSessions(response.data);
-        setToast({
-          open: true,
-          message: "Sessions refreshed successfully",
-          severity: "success",
-        });
+        showSnackbar("Sessions refreshed successfully", "success");
       } else {
-        setToast({
-          open: true,
-          message: "Failed to fetch sessions",
-          severity: "error",
-        });
+        showSnackbar("Failed to fetch sessions", "error");
       }
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
-      setToast({
-        open: true,
-        message: "Network error: Failed to fetch sessions",
-        severity: "error",
-      });
+      showSnackbar("Network error: Failed to fetch sessions", "error");
     } finally {
       setIsSessionsLoading(false);
     }
@@ -875,23 +848,6 @@ export function RecentSessionsTable({
         </Alert>
       </Snackbar>
 
-      {/* Toast Notification */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={handleCloseToast}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        sx={{ zIndex: 9999 }}
-      >
-        <Alert
-          onClose={handleCloseToast}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ width: "100%", borderRadius: 2 }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

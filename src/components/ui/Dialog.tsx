@@ -137,7 +137,7 @@ function DialogContent({
 
   return (
     <DialogPortal>
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center pt-16 pb-6 overflow-y-auto">
         {/* Backdrop */}
         <div
           className={cn(
@@ -149,7 +149,7 @@ function DialogContent({
         {/* Content */}
         <div
           className={cn(
-            "fixed z-50 grid w-full max-w-lg scale-100 gap-4 border border-neutral-800 bg-neutral-950 p-6 shadow-lg sm:rounded-lg md:w-full",
+            "relative z-50 grid w-full max-w-lg gap-4 border border-neutral-800 bg-neutral-950 p-6 shadow-lg sm:rounded-lg md:w-full max-h-[calc(100vh-5rem)] overflow-y-auto",
             isAnimatingOut ? "animate-out-zoom" : "animate-in-zoom",
             className,
           )}

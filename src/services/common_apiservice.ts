@@ -54,8 +54,14 @@ export const commonService = {
       data: payload,
     });
   },
-  uploadGit: async (payload: { user_id: number | string, project_name: string, repo_url: string, branch: string, token?: string }): Promise<any | null> => {
+  uploadGit: async (payload: { user_id: number | string; project_name: string; repo_url: string }): Promise<any | null> => {
     return apiservice<any>(API_ENDPOINTS.POST.UPLOAD_GIT, {
+      method: "POST",
+      data: payload,
+    });
+  },
+  gitSelectBranch: async (payload: { user_id: number | string; session_id: string; project_id: number | string; branch: string }): Promise<any | null> => {
+    return apiservice<any>(API_ENDPOINTS.POST.GIT_SELECT_BRANCH, {
       method: "POST",
       data: payload,
     });

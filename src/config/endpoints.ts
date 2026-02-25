@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
     REGISTER: `${BASE_URL}api/auth/register`,
     UPLOAD: `${BASE_URL}api/visualization/upload`,
     UPLOAD_GIT: `${BASE_URL}/api/visualization/upload_git`,
+    GIT_SELECT_BRANCH: `${BASE_URL}/api/visualization/select_branch`,
     HEATMAP: `${BASE_URL}api/code_heatmap`,
     FILENODE: `${BASE_URL}api/analyze_project_ai`,
     DELETE: `${BASE_URL}api/projects/delete`,

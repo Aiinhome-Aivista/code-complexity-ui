@@ -85,13 +85,13 @@ export default function Sidebar() {
     publicEndpoints: false,
     unvalidatedInputs: false,
     largeFiles: false,
+    minLines: 500,
   });
 
   const filterOptions = [
-    { id: "high-risk", key: "highRiskOnly", label: "High risk only" },
     { id: "public-endpoints", key: "publicEndpoints", label: "Public endpoints" },
     { id: "unvalidated", key: "unvalidatedInputs", label: "Unvalidated inputs" },
-    { id: "large-files", key: "largeFiles", label: "Large files (>500 lines)" },
+    { id: "large-files", key: "largeFiles", label: "Large files" },
   ];
 
   const filteredFileTree = useMemo(() => {
@@ -108,21 +108,6 @@ export default function Sidebar() {
     setExpandedFolders(newExpanded);
   };
 
-  const getRiskColor = (risk: RiskLevel) => {
-    switch (risk) {
-      case "safe":
-      case "low":
-        return "bg-green-500";
-      case "moderate":
-        return "bg-yellow-500";
-      case "high":
-        return "bg-orange-500";
-      case "critical":
-        return "bg-red-500";
-      default:
-        return "bg-gray-300";
-    }
-  };
 
   const renderFileNode = (node: FileNode, depth: number = 0) => {
     const isExpanded = expandedFolders.has(node.id);
@@ -131,9 +116,8 @@ export default function Sidebar() {
     return (
       <div key={node.id}>
         <div
-          className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-indigo-100 transition-colors ${
-            isSelected ? "bg-indigo-200 dark:bg-indigo-900/30" : ""
-          }`}
+          className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-indigo-100 transition-colors ${isSelected ? "bg-indigo-200 dark:bg-indigo-900/30" : ""
+            }`}
           style={{ paddingLeft: `${depth * 16 + 12}px` }}
           onClick={() => {
             if (node.type === "folder") {
@@ -165,11 +149,8 @@ export default function Sidebar() {
             />
           )}
           <span className="text-sm text-neutral-700 flex-1">{node.name}</span>
-          <div
-            className={`w-2 h-2 rounded-full ${getRiskColor(node.risk)}`}
-            title={`${node.risk} risk`}
-          />
-          {node.type === "file" && node.lines && (
+
+          {node.type === "file" && typeof node.lines === "number" && (
             <span className="text-xs text-neutral-500 font-mono">
               {node.lines}L
             </span>
@@ -207,25 +188,42 @@ export default function Sidebar() {
         {isFiltersExpanded && (
           <div className="px-4 pb-4 space-y-2 pl-9 border border-transparent">
             {filterOptions.map((option) => (
-              <div key={option.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={option.id}
-                  checked={filters[option.key as keyof typeof filters]}
-                  onCheckedChange={(checked) =>
-                    setFilters({ ...filters, [option.key]: checked as boolean })
-                  }
-                  className={`${
-                    filters[option.key as keyof typeof filters]
+              <div key={option.id} className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={option.id}
+                    checked={filters[option.key as keyof typeof filters] as boolean}
+                    onCheckedChange={(checked) =>
+                      setFilters({ ...filters, [option.key]: checked as boolean })
+                    }
+                    className={`${filters[option.key as keyof typeof filters]
                       ? "bg-indigo-500 border-indigo-500"
                       : "bg-gray-200"
-                  }`}
-                />
-                <Label
-                  htmlFor={option.id}
-                  className="text-xs text-neutral-500 cursor-pointer"
-                >
-                  {option.label}
-                </Label>
+                      }`}
+                  />
+                  <Label
+                    htmlFor={option.id}
+                    className="text-xs text-neutral-500 cursor-pointer flex-1"
+                  >
+                    {option.id === "large-files" ? `${option.label} (>${filters.minLines} lines)` : option.label}
+                  </Label>
+                </div>
+                {option.id === "large-files" && filters.largeFiles && (
+                  <div className="pl-6 pt-1 flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                    <span className="text-xs text-neutral-500">Min lines:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      className="w-20 text-xs px-2 py-1 rounded border border-neutral-300 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      value={filters.minLines}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setFilters({ ...filters, minLines: val > 0 ? val : 0 });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>

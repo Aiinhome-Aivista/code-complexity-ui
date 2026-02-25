@@ -3,6 +3,12 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { fileTree as initialFileTree } from '@/data/mockData';
 import type { SessionDataTableItem } from "@/types/common_api_types";
 
+interface SnackbarState {
+  open: boolean;
+  message: string;
+  severity: "success" | "error" | "info" | "warning";
+}
+
 interface UIState {
   isUserMenuOpen: boolean;
   toggleUserMenu: () => void;
@@ -25,6 +31,10 @@ interface UIState {
   flowData: any | null;
   setFlowData: (data: any) => void;
   removeIssue: (nodeId: string, issueId: string) => void;
+  globalSnackbar: SnackbarState;
+  lastSnackbarTime: number;
+  showSnackbar: (message: string, severity: SnackbarState["severity"]) => void;
+  hideSnackbar: () => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -50,6 +60,20 @@ export const useUIStore = create<UIState>()(
       setActiveSessionId: (id) => set({ activeSessionId: id }),
       flowData: null,
       setFlowData: (data: any) => set({ flowData: data }),
+      globalSnackbar: { open: false, message: "", severity: "info" },
+      lastSnackbarTime: 0,
+      showSnackbar: (message, severity) => set((state) => {
+        const now = Date.now();
+        if (now - state.lastSnackbarTime < 3000 && state.globalSnackbar.open) {
+          // Ignore if less than 3 seconds since last snackbar AND a snackbar is currently open
+          return state;
+        }
+        return {
+          globalSnackbar: { open: true, message, severity },
+          lastSnackbarTime: now,
+        };
+      }),
+      hideSnackbar: () => set((state) => ({ globalSnackbar: { ...state.globalSnackbar, open: false } })),
       removeIssue: (nodeId, issueId) => set((state) => {
         if (!state.fileNodeData?.data?.FileNode) return state;
 
@@ -65,12 +89,12 @@ export const useUIStore = create<UIState>()(
                 // But wait, the `issueId` in the UI (e.g., `api-0`) corresponds to the index in the `issues` array.
                 const index = parseInt(issueId.replace('api-', ''));
                 if (!isNaN(index) && node.issues[index]) {
-                     // Filter out the issue at that specific index if indices align, 
-                     // OR filter by matching content if possible.
-                     // Since `api-X` is index-based, we can just remove it.
-                     // BUT, if we remove index 0, index 1 becomes 0. So subsequent removals might be tricky if not careful.
-                     // For single removal, it's fine.
-                     node.issues.splice(index, 1);
+                  // Filter out the issue at that specific index if indices align, 
+                  // OR filter by matching content if possible.
+                  // Since `api-X` is index-based, we can just remove it.
+                  // BUT, if we remove index 0, index 1 becomes 0. So subsequent removals might be tricky if not careful.
+                  // For single removal, it's fine.
+                  node.issues.splice(index, 1);
                 }
               }
               return true;
@@ -83,15 +107,15 @@ export const useUIStore = create<UIState>()(
         };
 
         findAndRemove(updatedFileNode.data.FileNode);
-        
+
         // Also update selectedFileNode if it matches
         let updatedSelected = state.selectedFileNode;
         if (state.selectedFileNode?.id === nodeId) {
-             updatedSelected = JSON.parse(JSON.stringify(state.selectedFileNode));
-             const index = parseInt(issueId.replace('api-', ''));
-              if (!isNaN(index) && updatedSelected.issues) {
-                  updatedSelected.issues.splice(index, 1);
-              }
+          updatedSelected = JSON.parse(JSON.stringify(state.selectedFileNode));
+          const index = parseInt(issueId.replace('api-', ''));
+          if (!isNaN(index) && updatedSelected.issues) {
+            updatedSelected.issues.splice(index, 1);
+          }
         }
 
         return { fileNodeData: updatedFileNode, selectedFileNode: updatedSelected };

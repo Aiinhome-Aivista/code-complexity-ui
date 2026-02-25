@@ -15,11 +15,13 @@ import {
   InsertDriveFile,
   GitHub,
   DriveFolderUpload,
+  AccountTree,
 } from "@mui/icons-material";
 import { cn } from "@/lib/utils";
 import { commonService } from "@/services/common_apiservice";
 import { Snackbar, Alert, CircularProgress } from "@mui/material";
 import { useAuthStore } from "@/store/authStore";
+import { useUIStore } from "@/store/uiStore";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 
@@ -35,6 +37,7 @@ export function UploadModal({
   onUploadSuccess,
 }: UploadModalProps) {
   const { user } = useAuthStore();
+  const { showSnackbar } = useUIStore();
   const [projectName, setProjectName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -43,20 +46,19 @@ export function UploadModal({
     size?: number;
   } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [toast, setToast] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
   const [loadingText, setLoadingText] = useState("Uploading Project...");
   const [uploadMode, setUploadMode] = useState<"file" | "git">("file");
   const [gitUrl, setGitUrl] = useState("");
-  const [gitBranch, setGitBranch] = useState("");
-  const [gitToken, setGitToken] = useState("");
+  // Two-step git flow state
+  const [showBranchDialog, setShowBranchDialog] = useState(false);
+  const [availableBranches, setAvailableBranches] = useState<string[]>([]);
+  const [currentBranch, setCurrentBranch] = useState("");
+  const [gitSessionId, setGitSessionId] = useState("");
+  const [gitProjectId, setGitProjectId] = useState<number | string>("");
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [customBranch, setCustomBranch] = useState("");
+  const [useCustomBranch, setUseCustomBranch] = useState(false);
+  const [isSelectingBranch, setIsSelectingBranch] = useState(false);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -145,15 +147,11 @@ export function UploadModal({
     if (!projectName.trim()) return;
 
     if (!user) {
-      setToast({
-        open: true,
-        message: "User not authenticated. Please log in.",
-        severity: "error",
-      });
+      showSnackbar("User not authenticated. Please log in.", "error");
       return;
     }
 
-    // Git Upload
+    // Git Upload — Step 1: clone repo and get branches
     if (uploadMode === "git") {
       if (!gitUrl.trim()) return;
 
@@ -161,29 +159,28 @@ export function UploadModal({
         setIsUploading(true);
         setLoadingText("Cloning Repository...");
 
-        await commonService.uploadGit({
-          user_id: user.id || 7, // Fallback as per user request example if user.id missing, largely safe
+        const response = await commonService.uploadGit({
+          user_id: user.id || 7,
           project_name: projectName.trim(),
           repo_url: gitUrl.trim(),
-          branch: gitBranch.trim() || "main",
-          token: gitToken.trim(),
         });
 
-        setToast({
-          open: true,
-          message: "Git project imported successfully!",
-          severity: "success",
-        });
-        if (onUploadSuccess) onUploadSuccess();
-        onOpenChange(false);
-        resetSelection();
-      } catch (error) {
+        if (response?.isSuccess && response?.data) {
+          const { branches, current_branch, project_id, session_id } = response.data;
+          setAvailableBranches(branches ?? []);
+          setCurrentBranch(current_branch ?? "");
+          setGitProjectId(project_id);
+          setGitSessionId(session_id);
+          setSelectedBranch(current_branch ?? (branches?.[0] ?? ""));
+          setUseCustomBranch(false);
+          setCustomBranch("");
+          setShowBranchDialog(true);
+        } else {
+          throw new Error(response?.message ?? "Repository clone failed.");
+        }
+      } catch (error: any) {
         console.error("Git upload failed", error);
-        setToast({
-          open: true,
-          message: "Failed to import from Git. Please check Repository URL and credentials.",
-          severity: "error",
-        });
+        showSnackbar(error?.message ?? "Failed to import from Git. Please check the Repository URL.", "error");
       } finally {
         setIsUploading(false);
       }
@@ -209,13 +206,15 @@ export function UploadModal({
     try {
       setIsUploading(true);
       console.log("Starting upload...");
-      await commonService.uploadFiles(formData, controller.signal);
+      const response = await commonService.uploadFiles(formData, controller.signal);
+
+      if (response && response.isSuccess === false) {
+        // Handle 200 status with an explicit "isSuccess": false body just in case
+        throw new Error(response.message || "Failed to upload project. Please try again.");
+      }
+
       console.log("Upload successful");
-      setToast({
-        open: true,
-        message: "Project uploaded successfully!",
-        severity: "success",
-      });
+      showSnackbar(response?.message || "Project uploaded successfully!", "success");
       if (onUploadSuccess) {
         onUploadSuccess();
       }
@@ -227,11 +226,8 @@ export function UploadModal({
         return;
       }
       console.error("Upload failed", error);
-      setToast({
-        open: true,
-        message: "Failed to upload project. Please try again.",
-        severity: "error",
-      });
+      // Use the API provided error message if it exists, otherwise use fallback
+      showSnackbar(error?.message || "Failed to upload project. Please try again.", "error");
     } finally {
       setIsUploading(false);
       abortControllerRef.current = null;
@@ -248,8 +244,37 @@ export function UploadModal({
     onOpenChange(false);
   };
 
-  const handleCloseToast = () => {
-    setToast((prev) => ({ ...prev, open: false }));
+  const handleConfirmBranch = async () => {
+    if (!user) return;
+    const branch = useCustomBranch ? customBranch.trim() : selectedBranch;
+    if (!branch) return;
+
+    try {
+      setIsSelectingBranch(true);
+      const response = await commonService.gitSelectBranch({
+        user_id: user.id || 7,
+        session_id: gitSessionId,
+        project_id: gitProjectId,
+        branch,
+      });
+
+      if (response?.isSuccess) {
+        showSnackbar("Git project imported successfully!", "success");
+        setTimeout(() => {
+          if (onUploadSuccess) onUploadSuccess();
+        }, 3000);
+        setShowBranchDialog(false);
+        onOpenChange(false);
+        resetSelection();
+      } else {
+        throw new Error(response?.message ?? "Branch selection failed.");
+      }
+    } catch (error: any) {
+      console.error("Branch selection failed", error);
+      showSnackbar(error?.message ?? "Failed to select branch. Please try again.", "error");
+    } finally {
+      setIsSelectingBranch(false);
+    }
   };
 
   const resetSelection = (e?: React.MouseEvent) => {
@@ -258,16 +283,27 @@ export function UploadModal({
     setSelectedFiles([]);
     setProjectName("");
     setGitUrl("");
-    setGitBranch("");
-    setGitToken("");
     setUploadMode("file");
+    setShowBranchDialog(false);
+    setAvailableBranches([]);
+    setCurrentBranch("");
+    setGitSessionId("");
+    setGitProjectId("");
+    setSelectedBranch("");
+    setCustomBranch("");
+    setUseCustomBranch(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (folderInputRef.current) folderInputRef.current.value = "";
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] sm:w-[500px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/80">
+      <DialogContent
+        className={cn(
+          "sm:max-w-[500px] sm:w-[500px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/80 transition-opacity duration-300",
+          showBranchDialog ? "opacity-0 pointer-events-none" : "opacity-100"
+        )}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900">
             Upload Project
@@ -307,8 +343,6 @@ export function UploadModal({
               onClick={() => {
                 setUploadMode("git");
                 setSelectedItem(null);
-                setGitBranch("");
-                setGitToken("");
               }}
             >
               Import from Git
@@ -340,7 +374,7 @@ export function UploadModal({
 
           <div
             className={cn(
-              "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden h-[320px]",
+              "relative border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden flex-1 min-h-0",
               isDragging ? "border-blue-600 bg-blue-100" : "border-gray-500 ",
             )}
             onDragOver={uploadMode === "file" ? handleDragOver : undefined}
@@ -349,43 +383,59 @@ export function UploadModal({
           >
             {isUploading && (
               <div className="absolute inset-0 bg-white/95 dark:bg-neutral-900/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
-                {/* Scanner Animation Container */}
-                <div className="relative w-24 h-24 mb-8">
-                  {/* File Icon Base */}
-                  <div className="absolute inset-0 flex items-center justify-center text-blue-100 dark:text-blue-900/30">
-                    <InsertDriveFile style={{ fontSize: 80 }} />
-                  </div>
+                {uploadMode === "file" ? (
+                  <>
+                    {/* Scanner Animation Container */}
+                    <div className="relative w-24 h-24 mb-8">
+                      {/* File Icon Base */}
+                      <div className="absolute inset-0 flex items-center justify-center text-blue-100 dark:text-blue-900/30">
+                        <InsertDriveFile style={{ fontSize: 80 }} />
+                      </div>
 
-                  {/* Scanning Beam */}
-                  <div
-                    className="absolute z-10 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]"
-                    style={{
-                      animation: 'scan 2s ease-in-out infinite'
-                    }}
-                  />
+                      {/* Scanning Beam */}
+                      <div
+                        className="absolute z-10 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+                        style={{
+                          animation: "scan 2s ease-in-out infinite",
+                        }}
+                      />
 
-                  {/* Grid Lines Overlay */}
-                  <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:10px_10px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
-                </div>
+                      {/* Grid Lines Overlay */}
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:10px_10px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
+                    </div>
 
-                <style dangerouslySetInnerHTML={{
-                  __html: `
-                    @keyframes scan {
-                      0% { top: 0%; opacity: 0; }
-                      15% { top: 0%; opacity: 1; }
-                      50% { top: 100%; opacity: 1; }
-                      85% { top: 100%; opacity: 0; }
-                      100% { top: 0%; opacity: 0; }
-                    }
-                  `
-                }} />
+                    <style
+                      dangerouslySetInnerHTML={{
+                        __html: `
+                          @keyframes scan {
+                            0% { top: 0%; opacity: 0; }
+                            15% { top: 0%; opacity: 1; }
+                            50% { top: 100%; opacity: 1; }
+                            85% { top: 100%; opacity: 0; }
+                            100% { top: 0%; opacity: 0; }
+                          }
+                        `,
+                      }}
+                    />
 
-                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 animate-pulse mb-2">
-                  {loadingText}
-                </h3>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Please wait while we process your files...
-                </p>
+                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 animate-pulse mb-2">
+                      {loadingText}
+                    </h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      Please wait while we process your files...
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <CircularProgress size={64} className="text-blue-600 mb-6" />
+                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 animate-pulse mb-2">
+                      Cloning Repository...
+                    </h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center px-4">
+                      Please hold on while we fetch the branches from your remote repository.
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
@@ -407,150 +457,113 @@ export function UploadModal({
             />
 
             {/* Content Container */}
-            <div className="relative w-full h-full">
+            <div className="relative w-full flex flex-col items-center justify-center min-h-[180px]">
               {/* Git Upload Section */}
-              <div
-                className={cn(
-                  "absolute inset-0 w-full h-full flex flex-col items-center transition-opacity duration-300 ease-in-out",
-                  uploadMode === "git"
-                    ? "opacity-100 z-10"
-                    : "opacity-0 pointer-events-none z-0"
-                )}
-              >
-                <div className="w-full flex flex-col items-center">
-                  <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 text-gray-700 transition-transform duration-200">
-                    <GitHub style={{ fontSize: 32 }} />
-                  </div>
-                  <div className="w-full space-y-3">
-                    <div className="space-y-1">
-                      <Label htmlFor="git-url" className="text-gray-700 font-medium ml-1">
-                        Repository URL <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="git-url"
-                        placeholder="e.g. https://github.com/username/repository"
-                        value={gitUrl}
-                        onChange={(e) => setGitUrl(e.target.value)}
-                        className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
-                        tabIndex={uploadMode === "git" ? 0 : -1}
-                      />
+              {uploadMode === "git" && (
+                <div className="w-full flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                  <div className="w-full flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 text-gray-700 transition-transform duration-200">
+                      <GitHub style={{ fontSize: 32 }} />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="w-full space-y-3">
                       <div className="space-y-1">
-                        <Label htmlFor="git-branch" className="text-gray-700 font-medium ml-1">
-                          Branch
+                        <Label htmlFor="git-url" className="text-gray-700 font-medium ml-1">
+                          Repository URL <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          id="git-branch"
-                          placeholder="e.g. main or master"
-                          value={gitBranch}
-                          onChange={(e) => setGitBranch(e.target.value)}
+                          id="git-url"
+                          placeholder="e.g. https://github.com/username/repository"
+                          value={gitUrl}
+                          onChange={(e) => setGitUrl(e.target.value)}
                           className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
                           tabIndex={uploadMode === "git" ? 0 : -1}
                         />
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="git-token" className="text-gray-700 font-medium ml-1">
-                          Token (Optional)
-                        </Label>
-                        <Input
-                          id="git-token"
-                          type="password"
-                          placeholder="e.g. github_pat_..."
-                          value={gitToken}
-                          onChange={(e) => setGitToken(e.target.value)}
-                          className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
-                          tabIndex={uploadMode === "git" ? 0 : -1}
-                        />
-                      </div>
+                      <p className="text-xs text-gray-500 text-center pt-1">
+                        After cloning, you'll be prompted to select a branch.
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* File Upload Section */}
-              <div
-                className={cn(
-                  "absolute inset-0 w-full h-full flex flex-col items-center transition-opacity duration-300 ease-in-out",
-                  uploadMode === "file"
-                    ? "opacity-100 z-10"
-                    : "opacity-0 pointer-events-none z-0"
-                )}
-              >
-                {selectedItem ? (
-                  <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 z-10 w-full">
-                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 text-blue-700/90">
-                      <InsertDriveFile style={{ fontSize: 32 }} />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-1">
-                      {selectedItem.name}
-                    </h4>
-                    <p className="text-sm text-gray-700">
-                      {selectedItem.type === "file" && selectedItem.size
-                        ? `${(selectedItem.size / 1024).toFixed(1)} KB`
-                        : `Selected`}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-4 text-red-700 hover:text-red-800 hover:bg-red-200 cursor-pointer"
-                      onClick={resetSelection}
-                      disabled={isUploading}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 z-10 w-full">
-                    <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200">
-                      <CloudUpload
-                        className="text-gray-700 group-hover:text-blue-700 transition-colors"
-                        style={{ fontSize: 32 }}
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <h4 className="text-lg font-medium text-gray-900">
-                        Drag and drop to upload
+              {uploadMode === "file" && (
+                <div className="w-full flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                  {selectedItem ? (
+                    <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200 z-10 w-full">
+                      <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 text-blue-700/90">
+                        <InsertDriveFile style={{ fontSize: 32 }} />
+                      </div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-1">
+                        {selectedItem.name}
                       </h4>
                       <p className="text-sm text-gray-700">
-                        or choose an option below
+                        {selectedItem.type === "file" && selectedItem.size
+                          ? `${(selectedItem.size / 1024).toFixed(1)} KB`
+                          : `Selected`}
                       </p>
-                    </div>
-
-                    <div className="flex flex-col gap-3 mt-2 w-full max-w-xs mx-auto">
                       <Button
-                        disabled={isDragging}
-                        variant="secondary"
-                        size="default"
-                        className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer relative"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFileClick();
-                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="mt-4 text-red-700 hover:text-red-800 hover:bg-red-200 cursor-pointer"
+                        onClick={resetSelection}
+                        disabled={isUploading}
                       >
-                        <InsertDriveFile className="mr-3 h-5 w-5 text-gray-600" />
-                        <span>Select Files</span>
-                      </Button>
-
-                      <Button
-                        disabled={isDragging}
-                        variant="secondary"
-                        size="default"
-                        className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer relative"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFolderClick();
-                        }}
-                      >
-                        <DriveFolderUpload className="mr-3 h-5 w-5 text-gray-600" />
-                        <span>Select Folder</span>
+                        Remove
                       </Button>
                     </div>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 z-10 w-full">
+                      <div className="w-16 h-16 rounded-full bg-blue-800/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200">
+                        <CloudUpload
+                          className="text-gray-700 group-hover:text-blue-700 transition-colors"
+                          style={{ fontSize: 32 }}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <h4 className="text-lg font-medium text-gray-900">
+                          Drag and drop to upload
+                        </h4>
+                        <p className="text-sm text-gray-700">
+                          or choose an option below
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-3 mt-2 w-full max-w-xs mx-auto">
+                        <Button
+                          disabled={isDragging}
+                          variant="secondary"
+                          size="default"
+                          className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer relative"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFileClick();
+                          }}
+                        >
+                          <InsertDriveFile className="mr-3 h-5 w-5 text-gray-600" />
+                          <span>Select Files</span>
+                        </Button>
+
+                        <Button
+                          disabled={isDragging}
+                          variant="secondary"
+                          size="default"
+                          className="w-full bg-blue-800/20 hover:bg-blue-800/30 hover:scale-101 text-gray-900 h-10 justify-start px-4 cursor-pointer relative"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFolderClick();
+                          }}
+                        >
+                          <DriveFolderUpload className="mr-3 h-5 w-5 text-gray-600" />
+                          <span>Select Folder</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -576,23 +589,84 @@ export function UploadModal({
         </DialogFooter>
       </DialogContent>
 
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={6000}
-        onClose={handleCloseToast}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseToast}
-          severity={toast.severity}
-          variant="filled"
-          sx={{
-            width: "100%",
-          }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
+      {/* Branch Selection Dialog */}
+      <Dialog open={showBranchDialog} onOpenChange={(o) => { if (!o && !isSelectingBranch) { setShowBranchDialog(false); } }}>
+        <DialogContent className="sm:max-w-[420px] bg-gray-200 p-4 border-gray-400 text-gray-900 [&>button>svg]:!text-red-700/80">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <AccountTree className="text-blue-700" style={{ fontSize: 22 }} />
+              Select Branch
+            </DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Repository cloned successfully. Choose which branch to analyse.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 py-2">
+            {/* Dropdown of branches */}
+            {!useCustomBranch && (
+              <div className="space-y-1">
+                <Label className="text-gray-700 font-medium">Branch</Label>
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="w-full rounded-md border border-gray-400 bg-white text-gray-900 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {availableBranches.map((b) => (
+                    <option key={b} value={b}>
+                      {b}{b === currentBranch ? " (current)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Custom branch input */}
+            {useCustomBranch && (
+              <div className="space-y-1">
+                <Label htmlFor="custom-branch" className="text-gray-700 font-medium">
+                  Enter Branch Name
+                </Label>
+                <Input
+                  id="custom-branch"
+                  placeholder="e.g. feature/my-branch"
+                  value={customBranch}
+                  onChange={(e) => setCustomBranch(e.target.value)}
+                  className="bg-white border-gray-400 text-gray-900 placeholder:text-gray-500"
+                  autoFocus
+                />
+              </div>
+            )}
+
+            {/* Toggle between dropdown and custom input */}
+            <button
+              type="button"
+              onClick={() => { setUseCustomBranch((v) => !v); setCustomBranch(""); }}
+              className="text-xs text-blue-700 hover:underline text-left w-fit"
+            >
+              {useCustomBranch ? "← Choose from list" : "Type a different branch name →"}
+            </button>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              className="cursor-pointer border-gray-500 text-white bg-gray-800/30 hover:bg-gray-800/40"
+              onClick={() => setShowBranchDialog(false)}
+              disabled={isSelectingBranch}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={isSelectingBranch || (useCustomBranch ? !customBranch.trim() : !selectedBranch)}
+              onClick={handleConfirmBranch}
+              className="bg-blue-800/80 hover:bg-blue-700/80 text-white cursor-pointer"
+            >
+              {isSelectingBranch ? "Importing..." : "Confirm Branch"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

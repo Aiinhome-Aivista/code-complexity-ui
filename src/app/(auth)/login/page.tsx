@@ -4,21 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GitHub, Google, ArrowForward } from "@mui/icons-material";
-import { Snackbar, Alert } from "@mui/material";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { authService } from "@/services/auth_apiservice";
+import { useUIStore } from "@/store/uiStore";
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
+  const { showSnackbar } = useUIStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,26 +29,14 @@ export default function LoginPage() {
 
       if (response && response.isSuccess) {
         localStorage.setItem("userdata", JSON.stringify(response.data));
-        setToast({
-          open: true,
-          message: response.message || "Login successful",
-          severity: "success",
-        });
+        showSnackbar(response.message || "Login successful", "success");
         router.push("/dashboard");
       } else {
-        setToast({
-          open: true,
-          message: response?.message || "Login failed",
-          severity: "error",
-        });
+        showSnackbar(response?.message || "Login failed", "error");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setToast({
-        open: true,
-        message: (error as Error).message || "An error occurred during login",
-        severity: "error",
-      });
+      showSnackbar((error as Error).message || "An error occurred during login", "error");
     } finally {
       setIsLoading(false);
     }
@@ -125,23 +109,6 @@ export default function LoginPage() {
           </Link>
         </div>
       </Card>
-
-      {/* Toast Notification */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ width: "100%", borderRadius: 2 }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }
