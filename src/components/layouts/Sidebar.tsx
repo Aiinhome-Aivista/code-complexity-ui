@@ -37,6 +37,7 @@ export default function Sidebar() {
   const fileNodeData = useUIStore((state) => state.fileNodeData);
   const selectedFileNode = useUIStore((state) => state.selectedFileNode);
   const setSelectedFileNode = useUIStore((state) => state.setSelectedFileNode);
+  const addOpenFile = useUIStore((state) => state.addOpenFile);
   const router = useRouter();
 
   // Transform API data to FileNode structure
@@ -126,7 +127,7 @@ export default function Sidebar() {
             if (node.type === "folder") {
               toggleFolder(node.id);
             } else {
-              setSelectedFileNode(node);
+              addOpenFile(node);
               // Update URL and navigate
               const params = new URLSearchParams(window.location.search);
               params.set("file", node.name);
@@ -254,12 +255,6 @@ export default function Sidebar() {
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="px-3 py-2 border-b border-neutral-200 flex-shrink-0">
-            <span className="text-xs text-neutral-500 uppercase tracking-wider">
-              Project Files
-            </span>
           </div>
 
           {/* File Tree */}

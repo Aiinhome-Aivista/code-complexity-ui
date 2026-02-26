@@ -22,6 +22,9 @@ interface UIState {
   setFileNodeData: (data: any) => void;
   selectedFileNode: any | null;
   setSelectedFileNode: (node: any) => void;
+  openFiles: any[]; // Changed from any | null to an array for tabs
+  addOpenFile: (node: any) => void;
+  removeOpenFile: (id: string) => void;
   fileTree: any[];
   setFileTree: (tree: any[]) => void;
   activeProjectName: string | null;
@@ -49,9 +52,39 @@ export const useUIStore = create<UIState>()(
       heatmapData: null,
       setHeatmapData: (data) => set({ heatmapData: data }),
       fileNodeData: null,
-      setFileNodeData: (data) => set({ fileNodeData: data, selectedFileNode: null }),
+      setFileNodeData: (data) => set({ fileNodeData: data, selectedFileNode: null, openFiles: [] }),
       selectedFileNode: null,
       setSelectedFileNode: (node) => set({ selectedFileNode: node }),
+      openFiles: [],
+      addOpenFile: (node) => set((state) => {
+        const isAlreadyOpen = state.openFiles.some((file) => file.id === node.id);
+        if (isAlreadyOpen) {
+          return { selectedFileNode: node };
+        }
+
+        let newOpenFiles = [...state.openFiles, node];
+        if (newOpenFiles.length > 5) {
+          newOpenFiles.shift(); // Remove the oldest tab to keep max 5
+        }
+        return {
+          openFiles: newOpenFiles,
+          selectedFileNode: node
+        };
+      }),
+      removeOpenFile: (id) => set((state) => {
+        const newOpenFiles = state.openFiles.filter((file) => file.id !== id);
+        let nextSelected = state.selectedFileNode;
+
+        // If the removed file was the active tab, select another tab
+        if (state.selectedFileNode?.id === id) {
+          nextSelected = newOpenFiles.length > 0 ? newOpenFiles[newOpenFiles.length - 1] : null;
+        }
+
+        return {
+          openFiles: newOpenFiles,
+          selectedFileNode: nextSelected
+        };
+      }),
       fileTree: initialFileTree,
       setFileTree: (tree) => set({ fileTree: tree }),
       activeProjectName: null,
