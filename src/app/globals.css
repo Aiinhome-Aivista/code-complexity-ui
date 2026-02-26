@@ -63,6 +63,12 @@ input[type="number"] {
   /* Firefox */
 }
 
+/* Hide Edge native password reveal and clear buttons */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
 /* Custom Scrollbar Styles */
 .custom-scrollbar {
   scrollbar-width: thin;

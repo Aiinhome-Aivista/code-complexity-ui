@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GitHub, Google, ArrowForward, Refresh } from "@mui/icons-material";
+import { GitHub, Google, ArrowForward, Refresh, Visibility, VisibilityOff } from "@mui/icons-material";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [captchaQuestion, setCaptchaQuestion] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { showSnackbar } = useUIStore();
 
   const fetchCaptcha = async () => {
@@ -104,14 +105,23 @@ export default function LoginPage() {
                 Password
               </Label>
             </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              className="bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-indigo-500"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                className="bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-indigo-500 pr-10"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">

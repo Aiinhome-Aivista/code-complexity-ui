@@ -12,7 +12,7 @@ export function GlobalSnackbar() {
             autoHideDuration={4000}
             onClose={hideSnackbar}
             anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            sx={{ zIndex: 6000 }}
+            sx={{ zIndex: 9999 }}
         >
             <Alert
                 onClose={hideSnackbar}
