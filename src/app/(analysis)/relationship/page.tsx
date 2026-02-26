@@ -179,7 +179,7 @@ function Flow() {
         nodeTypes={nodeTypes}
         connectionLineType={ConnectionLineType.SmoothStep}
         fitView
-        className="bg-gray-300"
+        className="bg-gray-200 dark:bg-[#1e1e1e]"
         minZoom={0.1}
       >
         <Controls className="!bg-white dark:!bg-neutral-800 !border-neutral-200 dark:!border-neutral-700 !fill-neutral-500" />
@@ -202,7 +202,7 @@ export default function FlowPage() {
   return (
     <ReactFlowProvider>
       <div className="h-[calc(100vh-64px)] bg-gray-100 dark:bg-neutral-950 p-6 flex flex-col gap-6">
-        <div className="flex-1 min-h-0 bg-gray-400 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-neutral-800 shadow-sm overflow-hidden relative">
+        <div className="flex-1 min-h-0 bg-gray-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-neutral-800 shadow-sm overflow-hidden relative">
           <Flow />
         </div>
       </div>

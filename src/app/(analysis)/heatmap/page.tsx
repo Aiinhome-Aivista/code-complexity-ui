@@ -327,25 +327,27 @@ export default function HeatmapPage() {
 
   if (!metricsData) {
     return (
-      <div className="h-full min-h-screen flex items-center justify-center flex-col gap-4 bg-gray-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
-          </span>
-          <span className="text-lg font-medium text-indigo-600 animate-pulse">
-            Generating Heatmap...
-          </span>
-        </div>
-        <div className="space-y-2 w-64">
-          <Skeleton
-            variant="text"
-            sx={{ bgcolor: "grey.300", fontSize: "1rem" }}
-          />
-          <Skeleton
-            variant="text"
-            sx={{ bgcolor: "grey.300", fontSize: "0.8rem" }}
-          />
+      <div className="flex-1 bg-gray-100 dark:bg-neutral-950 flex flex-col h-full border-l border-neutral-200 dark:border-neutral-800 overflow-hidden relative">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-neutral-950 z-10">
+          <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-indigo-200 dark:border-indigo-900/40 rounded-full animate-pulse blur-[2px]" />
+              <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin absolute inset-0" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 text-indigo-600 bg-indigo-50 dark:bg-neutral-800 rounded-full flex items-center justify-center shadow-inner">
+                  <span className="font-bold text-xs">AI</span>
+                </div>
+              </div>
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                Generating Heatmap
+              </h3>
+              <p className="text-sm text-neutral-500 max-w-[250px]">
+                We are analyzing metrics and preparing visual representations...
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

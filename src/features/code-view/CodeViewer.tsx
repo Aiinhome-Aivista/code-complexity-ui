@@ -23,6 +23,10 @@ import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Snackbar, Alert, Tooltip } from "@mui/material";
 import { Issue } from "@/data/mockData";
 import { CodeTabs } from "./CodeTabs";
+import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { getFileLanguage } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 interface FileCodeViewProps {
     code: string;
@@ -72,6 +76,8 @@ export function CodeViewer({
     onApplyFix,
     exitingIssueIds,
 }: FileCodeViewProps) {
+    const { theme, systemTheme } = useTheme();
+    const isDarkMode = theme === "dark" || (theme === "system" && systemTheme === "dark");
     const [isCollapsed, setIsCollapsed] = useState(false); // Change to false for tabs? Or keep false as default
 
     // Search State
@@ -277,122 +283,93 @@ export function CodeViewer({
                         </Badge>
                     </div>
                 </div>
-                <ScrollArea className="flex-1 bg-gray-300/60 min-h-0" ref={scrollAreaRef as any}>
-                    <div className="p-4 font-mono text-sm leading-relaxed pb-32">
-                        {codeLines.map((line, index) => {
-                            const lineNumber = index + 1;
-                            const lineIssues = issuesByLine[lineNumber];
-                            const hasIssue = lineIssues && lineIssues.length > 0;
-                            const lineMatches = matches.filter(m => m.lineIndex === index);
+                <ScrollArea className="flex-1 bg-gray-100 dark:bg-neutral-950 min-h-0" ref={scrollAreaRef as any}>
+                    <div className="text-[13px] leading-relaxed pb-32">
+                        <SyntaxHighlighter
+                            language={getFileLanguage(fileName)}
+                            style={isDarkMode ? vscDarkPlus : prism}
+                            customStyle={{ margin: 0, padding: '1rem 0', background: 'transparent' }}
+                            wrapLines={true}
+                            showLineNumbers={true}
+                            lineNumberStyle={{ minWidth: '3.5rem', paddingRight: '1rem', color: isDarkMode ? '#6e7681' : '#9ca3af', textAlign: 'right', userSelect: 'none' }}
+                            renderer={({ rows, stylesheet, useInlineStyles }) => {
+                                return (
+                                    <div style={{ wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>
+                                        {rows.map((row: any, i: number) => {
+                                            const lineNumber = i + 1;
+                                            
+                                            // Base class
+                                            let className = `table-row transition-colors border-l-2 border-transparent ${isDarkMode ? "hover:bg-white/5" : "hover:bg-black/5"} `;
+                                            let style: React.CSSProperties = { display: 'table-row' };
+                                            
+                                            const isSearchMatch = matches.some(m => m.lineIndex === lineNumber - 1);
+                                            const isCurrentMatch = matches[currentMatchIndex]?.lineIndex === lineNumber - 1;
 
-                            // Apply Search Matches & Issue Snippet Logic
-                            const appliedRanges: { start: number; end: number; type: 'search' | 'issue' }[] = [];
-                            let renderedLine: React.ReactNode = line;
-
-                            // 1. Search Matches
-                            if (searchQuery) {
-                                lineMatches.forEach(m => appliedRanges.push({ start: m.start, end: m.end, type: 'search' }));
-                            }
-
-                            // 2. Issue Snippet Matches
-                            if (hasIssue) {
-                                lineIssues.forEach(issue => {
-                                    const snippet = issue.original_snippet;
-                                    if (snippet) {
-                                        const cleanSnippet = snippet.trim().split(/\r?\n/)[0].trim();
-                                        if (cleanSnippet) {
-                                            let startIndex = 0;
-                                            let idx: number;
-                                            while ((idx = line.indexOf(cleanSnippet, startIndex)) > -1) {
-                                                const end = idx + cleanSnippet.length;
-
-                                                const overlap = appliedRanges.some(r =>
-                                                    (idx >= r.start && idx < r.end) ||
-                                                    (end > r.start && end <= r.end) ||
-                                                    (idx <= r.start && end >= r.end)
-                                                );
-
-                                                if (!overlap) {
-                                                    appliedRanges.push({ start: idx, end, type: 'issue' });
-                                                }
-                                                startIndex = end;
+                                            if (isCurrentMatch) {
+                                                className += "bg-amber-200/50 dark:bg-amber-900/50 border-l-amber-500 ";
+                                            } else if (isSearchMatch) {
+                                                className += "bg-amber-100/30 dark:bg-amber-900/30 border-l-amber-300 ";
                                             }
-                                        }
-                                    }
-                                });
-                            }
 
-                            if (appliedRanges.length > 0) {
-                                // Sort ranges by start index
-                                appliedRanges.sort((a, b) => a.start - b.start);
+                                            // Issue highlighting
+                                            const lineIssues = issuesByLine[lineNumber];
+                                            if (lineIssues?.length > 0) {
+                                                const highestSeverityIssue = lineIssues.sort((a, b) => {
+                                                    const severityOrder = { high: 3, moderate: 2, safe: 1 };
+                                                    return (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0);
+                                                })[0];
+                                                
+                                                if (highestSeverityIssue.severity === "high") {
+                                                    className += "bg-red-500/10 border-l-red-500 ";
+                                                } else if (highestSeverityIssue.severity === "moderate") {
+                                                    className += "bg-yellow-500/10 border-l-yellow-500 ";
+                                                } else {
+                                                    className += "bg-green-500/10 border-l-green-500 ";
+                                                }
+                                            }
 
-                                const parts: React.ReactNode[] = [];
-                                let lastIndex = 0;
-
-                                appliedRanges.forEach((range, i) => {
-                                    // Check for overlap with previous processed range (simple linear check)
-                                    if (range.start < lastIndex) return;
-
-                                    // Text before match
-                                    if (range.start > lastIndex) {
-                                        parts.push(line.substring(lastIndex, range.start));
-                                    }
-
-                                    // Render Match
-                                    if (range.type === 'search') {
-                                        const isCurrentMatch = matches[currentMatchIndex]?.lineIndex === index &&
-                                            matches[currentMatchIndex]?.start === range.start;
-                                        parts.push(
-                                            <span
-                                                key={`match-${index}-${range.start}`}
-                                                className={`${isCurrentMatch ? "bg-amber-400/50 text-black outline outline-2 outline-amber-400 z-10" : "bg-yellow-200/50 text-black"} rounded-sm px-0.5 transition-all`}
-                                            >
-                                                {line.substring(range.start, range.end)}
-                                            </span>
-                                        );
-                                    } else if (range.type === 'issue') {
-                                        parts.push(
-                                            <span
-                                                key={`issue-${index}-${range.start}`}
-                                                className="bg-red-500/20 dark:bg-red-500/30 rounded px-0.5 border-b border-red-500/50"
-                                            >
-                                                {line.substring(range.start, range.end)}
-                                            </span>
-                                        );
-                                    }
-
-                                    lastIndex = range.end;
-                                });
-
-                                // Text after last match
-                                if (lastIndex < line.length) {
-                                    parts.push(line.substring(lastIndex));
-                                }
-                                renderedLine = <>{parts}</>;
-                            } else if (line.trim() === '') {
-                                // Ensure empty lines still occupy vertical space
-                                renderedLine = " ";
-                            }
-
-                            return (
-                                <div
-                                    key={lineNumber}
-                                    id={`line-${index}`}
-                                    className="flex gap-4 hover:bg-neutral-100/50 group"
-                                >
-                                    <div className="w-12 text-right text-neutral-400 select-none flex-shrink-0 group-hover:text-neutral-600 transition-colors">
-                                        {lineNumber}
+                                            // Render Row
+                                            return (
+                                                <div key={i} className={className} style={style}>
+                                                    {/* Line Number Cell */}
+                                                    <div style={{
+                                                        display: 'table-cell',
+                                                        minWidth: '3.5rem',
+                                                        paddingRight: '1rem',
+                                                        color: isDarkMode ? '#6e7681' : '#9ca3af',
+                                                        textAlign: 'right',
+                                                        userSelect: 'none'
+                                                    }}>
+                                                        {lineNumber}
+                                                    </div>
+                                                    
+                                                    {/* Code Cell */}
+                                                    <div style={{
+                                                        display: 'table-cell',
+                                                        wordBreak: 'break-all',
+                                                        whiteSpace: 'pre-wrap',
+                                                        paddingLeft: '1rem',
+                                                        width: '100%'
+                                                    }}>
+                                                        {row.children.map((child: any, j: number) => {
+                                                            const nodeProps = {
+                                                                key: `${i}-${j}`,
+                                                                className: child.properties?.className?.join(' '),
+                                                                style: useInlineStyles ? child.properties?.style : undefined
+                                                            };
+                                                            
+                                                            return <span {...nodeProps}>{child.children?.[0]?.value || ''}</span>;
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                    <div className="flex-1 flex items-center gap-2 min-w-0">
-                                        <pre className="flex-1 whitespace-pre-wrap break-words m-0 font-inherit">
-                                            <code className="text-neutral-900 dark:text-neutral-200" style={{ fontFamily: "inherit" }}>
-                                                {renderedLine}
-                                            </code>
-                                        </pre>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            }}
+                        >
+                            {code}
+                        </SyntaxHighlighter>
                     </div>
                 </ScrollArea>
             </div>

@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import {
   ChevronRight,
   ExpandMore,
-  InsertDriveFileOutlined,
   Folder,
   FilterList,
   MenuOpen,
@@ -14,6 +13,7 @@ import { Skeleton, Tooltip, IconButton } from "@mui/material";
 import { Checkbox } from "../ui/Checkbox";
 import { Label } from "../ui/Label";
 import { filterTree } from "@/lib/utils";
+import { FileIcon } from "@/components/ui/FileIcon";
 import { useUIStore } from "@/store/uiStore";
 import { useRouter } from "next/navigation";
 
@@ -145,14 +145,14 @@ export default function Sidebar() {
             </span>
           )}
           {node.type === "folder" ? (
-            <Folder sx={{ fontSize: 16 }} className="text-indigo-400" />
+            <Folder sx={{ fontSize: 16 }} className="text-indigo-400 dark:text-indigo-500" />
           ) : (
-            <InsertDriveFileOutlined
-              sx={{ fontSize: 16 }}
-              className="text-neutral-500"
+            <FileIcon
+              fileName={node.name}
+              className="mr-1"
             />
           )}
-          <span className="text-sm text-neutral-700 flex-1">{node.name}</span>
+          <span className="text-sm text-neutral-700 dark:text-neutral-300 flex-1">{node.name}</span>
 
           {node.type === "file" && typeof node.lines === "number" && (
             <span className="text-xs text-neutral-500 font-mono">

@@ -1,8 +1,9 @@
 "use client";
 
 import { useUIStore } from "@/store/uiStore";
-import { Close as X, Code as CodeIcon } from "@mui/icons-material";
+import { Close as X } from "@mui/icons-material";
 import { Tooltip, IconButton } from "@mui/material";
+import { FileIcon } from "@/components/ui/FileIcon";
 
 export function CodeTabs() {
     const openFiles = useUIStore((state) => state.openFiles);
@@ -31,8 +32,8 @@ export function CodeTabs() {
                         >
                             <Tooltip title={file.path || file.name} placement="bottom" enterDelay={500}>
                                 <div className="flex items-center flex-1 min-w-0">
-                                    <CodeIcon sx={{ fontSize: 14 }} className={`mr-2 flex-shrink-0 ${isActive ? 'text-indigo-500' : 'text-neutral-400'}`} />
-                                    <span className="text-xs font-mono truncate">{file.name}</span>
+                                    <FileIcon fileName={file.name} className={`mr-2 flex-shrink-0 ${!isActive ? 'opacity-50 grayscale' : ''}`} />
+                                    <span className="text-xs font-mono truncate dark:text-neutral-300">{file.name}</span>
                                 </div>
                             </Tooltip>
                             <button

@@ -66,7 +66,7 @@ export default function DownloadsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-neutral-200 dark:bg-neutral-950">
+    <div className="p-6 space-y-6 min-h-screen bg-gray-100 dark:bg-neutral-950">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
           Downloads

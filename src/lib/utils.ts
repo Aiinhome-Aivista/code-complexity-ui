@@ -128,3 +128,47 @@ function checkNodeMatches(node: FileNode, filters: FilterState): boolean {
 
   return true;
 }
+
+export function getFileLanguage(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'js':
+    case 'jsx': return 'javascript';
+    case 'ts':
+    case 'tsx': return 'typescript';
+    case 'py': return 'python';
+    case 'go': return 'go';
+    case 'rs': return 'rust';
+    case 'java': return 'java';
+    case 'json': return 'json';
+    case 'html': return 'html';
+    case 'css': return 'css';
+    case 'md': return 'markdown';
+    case 'sh': return 'bash';
+    case 'yml':
+    case 'yaml': return 'yaml';
+    default: return 'plaintext';
+  }
+}
+
+export function getFileIconColor(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'js':
+    case 'jsx': return 'text-yellow-500 dark:text-yellow-400';
+    case 'ts':
+    case 'tsx': return 'text-blue-500 dark:text-blue-400';
+    case 'py': return 'text-green-500 dark:text-green-400';
+    case 'go': return 'text-cyan-500 dark:text-cyan-400';
+    case 'rs': return 'text-orange-500 dark:text-orange-400';
+    case 'java': return 'text-red-500 dark:text-red-400';
+    case 'json': return 'text-green-600 dark:text-green-500';
+    case 'html': return 'text-orange-600 dark:text-orange-500';
+    case 'css': return 'text-blue-400 dark:text-blue-300';
+    case 'md': return 'text-neutral-500 dark:text-neutral-400';
+    case 'sh': return 'text-green-400 dark:text-green-300';
+    case 'yml':
+    case 'yaml': return 'text-purple-500 dark:text-purple-400';
+    default: return 'text-neutral-500 dark:text-neutral-400';
+  }
+}

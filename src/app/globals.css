@@ -72,7 +72,7 @@ input::-ms-clear {
 /* Custom Scrollbar Styles */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #262626 transparent;
+  scrollbar-color: #2626262c transparent;
   /* neutral-800 transparent */
 }
 
