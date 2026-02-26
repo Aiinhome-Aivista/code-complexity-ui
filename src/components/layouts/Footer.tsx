@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="space-y-6 max-w-sm">
             <div className="flex items-center gap-2">
               <div className="bg-indigo-700 text-white text-xl font-bold p-1.5 rounded-xl shadow-lg shadow-indigo-900/10">
-                CV
+                CQ
               </div>
               <span className="text-xl font-bold text-neutral-900">
                 CodeQuality

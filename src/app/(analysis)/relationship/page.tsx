@@ -29,11 +29,11 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  const nodeWidth = 350; // Increased card width + gap
-  const nodeHeight = 150; // Increased Approximate card height
+  const nodeWidth = 350; // Width of card
+  const nodeHeight = 200; // Expected max height of a card.
 
   // Left-to-Right layout with more space horizontally and vertically
-  dagreGraph.setGraph({ rankdir: "LR", ranksep: 100, nodesep: 50 });
+  dagreGraph.setGraph({ rankdir: "LR", ranksep: 180, nodesep: 150 });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -202,12 +202,6 @@ export default function FlowPage() {
   return (
     <ReactFlowProvider>
       <div className="h-[calc(100vh-64px)] bg-gray-100 dark:bg-neutral-950 p-6 flex flex-col gap-6">
-        <div className="shrink-0">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Visual graph of file dependencies and relationships
-          </p>
-        </div>
-
         <div className="flex-1 min-h-0 bg-gray-400 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-neutral-800 shadow-sm overflow-hidden relative">
           <Flow />
         </div>

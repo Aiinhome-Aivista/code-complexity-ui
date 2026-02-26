@@ -45,7 +45,7 @@ export default function HomePage() {
           muted
           playsInline
           className="absolute inset-0 z-0"
-          style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.80)" }}
+          style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.70)" }}
         >
           <source src="/home-hero-bg.mp4" type="video/mp4" />
         </video>

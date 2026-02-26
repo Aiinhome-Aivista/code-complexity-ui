@@ -10,9 +10,11 @@ import {
     Visibility,
     VisibilityOff,
     PersonOutline as PersonOutlineIcon,
+    WarningAmberRounded as WarningIcon,
 } from "@mui/icons-material";
 import { Snackbar, Alert, Box } from "@mui/material";
 import { Button } from "@/components/ui/Button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/Dialog";
 import { useAuthStore } from "@/store/authStore";
 import { commonService } from "@/services/common_apiservice";
 import { useRouter } from "next/navigation";
@@ -280,30 +282,38 @@ export function OptionsDropdown() {
             </Snackbar>
 
             {/* Logout Confirmation */}
-            <Snackbar open={logoutConfirmOpen} onClose={handleCancelLogout} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
-                <Alert
-                    severity="warning"
-                    variant="filled"
-                    sx={{
-                        width: "100%",
-                        borderRadius: 2,
-                        alignItems: "center",
-                        "& .MuiAlert-message": { display: "flex", alignItems: "center", gap: 2 },
-                    }}
-                    action={
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                            <Button size="sm" variant="ghost" onClick={handleCancelLogout} className="text-white hover:bg-white/20">
+            <Dialog open={logoutConfirmOpen} onOpenChange={handleCancelLogout}>
+                <DialogContent className="sm:max-w-sm bg-gray-100 dark:bg-neutral-900 border-gray-300 dark:border-neutral-800 p-0 overflow-hidden">
+                    <div className="flex flex-col items-center justify-center pt-8 pb-4 px-6 space-y-4">
+                        <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-1 shadow-sm">
+                            <LogoutIcon sx={{ fontSize: 32 }} className="text-indigo-600 dark:text-indigo-500" />
+                        </div>
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-center text-neutral-900 dark:text-white">Sign Out</DialogTitle>
+                            <DialogDescription className="text-center text-neutral-600 dark:text-neutral-400 text-sm mt-2">
+                                Are you sure you want to sign out of your account?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex w-full mt-4 gap-3 sm:justify-center">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="flex-1 bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                                onClick={handleCancelLogout}
+                            >
                                 Cancel
                             </Button>
-                            <Button size="sm" onClick={performLogout} className="bg-red-700 hover:bg-red-800 text-white border-0">
-                                Logout
+                            <Button
+                                type="button"
+                                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-900/20 transition-all hover:scale-105 border-0"
+                                onClick={performLogout}
+                            >
+                                Sign Out
                             </Button>
-                        </Box>
-                    }
-                >
-                    Are you sure you want to sign out?
-                </Alert>
-            </Snackbar>
+                        </DialogFooter>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
         </>
     );
