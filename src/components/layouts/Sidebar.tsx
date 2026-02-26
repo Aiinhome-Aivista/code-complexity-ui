@@ -7,8 +7,10 @@ import {
   InsertDriveFileOutlined,
   Folder,
   FilterList,
+  MenuOpen,
+  Menu,
 } from "@mui/icons-material";
-import { Skeleton } from "@mui/material";
+import { Skeleton, Tooltip, IconButton } from "@mui/material";
 import { Checkbox } from "../ui/Checkbox";
 import { Label } from "../ui/Label";
 import { filterTree } from "@/lib/utils";
@@ -76,8 +78,9 @@ export default function Sidebar() {
     new Set(),
   );
 
-  // State for collapsible filters
+  // State for collapsible filters and sidebar
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -166,115 +169,140 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-80 border-r border-neutral-200 bg-gray-200 flex flex-col h-full transition-colors duration-300">
-      {/* Collapsible Filters Header */}
-      <div className="border-b border-neutral-200">
-        <div
-          className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-neutral-100 transition-colors select-none"
-          onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
-        >
-          <span className="text-neutral-400 flex items-center">
-            {isFiltersExpanded ? (
-              <ExpandMore sx={{ fontSize: 16 }} />
-            ) : (
-              <ChevronRight sx={{ fontSize: 16 }} />
-            )}
+    <div
+      className={`border-r border-neutral-200 bg-gray-200 flex flex-col h-full transition-all duration-300 ease-in-out relative ${isSidebarExpanded ? "w-80" : "w-12 bg-gray-100"
+        }`}
+    >
+      {/* Sidebar Toggle Button */}
+      <div className={`flex items-center p-2 border-b border-neutral-200 h-10 ${isSidebarExpanded ? 'justify-between' : 'justify-center'}`}>
+        {isSidebarExpanded && (
+          <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider px-2">
+            Explorer
           </span>
-          <FilterList sx={{ fontSize: 16 }} className="text-neutral-400" />
-          <span className="text-sm text-neutral-600 font-medium">Filters</span>
-        </div>
-
-        {/* Filter Options (Hidden when collapsed) */}
-        {isFiltersExpanded && (
-          <div className="px-4 pb-4 space-y-2 pl-9 border border-transparent">
-            {filterOptions.map((option) => (
-              <div key={option.id} className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id={option.id}
-                    checked={filters[option.key as keyof typeof filters] as boolean}
-                    onCheckedChange={(checked) =>
-                      setFilters({ ...filters, [option.key]: checked as boolean })
-                    }
-                    className={`${filters[option.key as keyof typeof filters]
-                      ? "bg-indigo-500 border-indigo-500"
-                      : "bg-gray-200"
-                      }`}
-                  />
-                  <Label
-                    htmlFor={option.id}
-                    className="text-xs text-neutral-500 cursor-pointer flex-1"
-                  >
-                    {option.id === "large-files" ? `${option.label} (>${filters.minLines} lines)` : option.label}
-                  </Label>
-                </div>
-                {option.id === "large-files" && filters.largeFiles && (
-                  <div className="pl-6 pt-1 flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
-                    <span className="text-xs text-neutral-500">Min lines:</span>
-                    <input
-                      type="number"
-                      min="1"
-                      className="w-20 text-xs px-2 py-1 rounded border border-neutral-300 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      value={filters.minLines}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 0;
-                        setFilters({ ...filters, minLines: val > 0 ? val : 0 });
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         )}
+        <Tooltip title={isSidebarExpanded ? "Collapse Explorer" : "Expand Explorer"} placement="right">
+          <IconButton
+            size="small"
+            onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+            className="text-neutral-500 hover:text-indigo-600 transition-colors"
+          >
+            {isSidebarExpanded ? <MenuOpen sx={{ fontSize: 18 }} /> : <Menu sx={{ fontSize: 18 }} />}
+          </IconButton>
+        </Tooltip>
       </div>
 
-      <div className="px-3 py-2 border-b border-neutral-200 flex-shrink-0">
-        <span className="text-xs text-neutral-500 uppercase tracking-wider">
-          Project Files
-        </span>
-      </div>
+      {isSidebarExpanded && (
+        <>
+          {/* Collapsible Filters Header */}
+          <div className="border-b border-neutral-200 flex-shrink-0">
+            <div
+              className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-neutral-100 transition-colors select-none"
+              onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+            >
+              <span className="text-neutral-400 flex items-center">
+                {isFiltersExpanded ? (
+                  <ExpandMore sx={{ fontSize: 16 }} />
+                ) : (
+                  <ChevronRight sx={{ fontSize: 16 }} />
+                )}
+              </span>
+              <FilterList sx={{ fontSize: 16 }} className="text-neutral-400" />
+              <span className="text-sm text-neutral-600 font-medium">Filters</span>
+            </div>
 
-      {/* File Tree */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="py-2">
-          {!fileNodeData ? (
-            <div className="px-4 space-y-3">
-              <div className="flex items-center gap-2 py-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                </span>
-                <span className="text-xs font-medium text-indigo-600 animate-pulse">
-                  Analyzing project structure...
-                </span>
+            {/* Filter Options (Hidden when collapsed) */}
+            {isFiltersExpanded && (
+              <div className="px-4 pb-4 space-y-2 pl-9 border border-transparent">
+                {filterOptions.map((option) => (
+                  <div key={option.id} className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={option.id}
+                        checked={filters[option.key as keyof typeof filters] as boolean}
+                        onCheckedChange={(checked) =>
+                          setFilters({ ...filters, [option.key]: checked as boolean })
+                        }
+                        className={`${filters[option.key as keyof typeof filters]
+                          ? "bg-indigo-500 border-indigo-500"
+                          : "bg-gray-200"
+                          }`}
+                      />
+                      <Label
+                        htmlFor={option.id}
+                        className="text-xs text-neutral-500 cursor-pointer flex-1"
+                      >
+                        {option.id === "large-files" ? `${option.label} (>${filters.minLines} lines)` : option.label}
+                      </Label>
+                    </div>
+                    {option.id === "large-files" && filters.largeFiles && (
+                      <div className="pl-6 pt-1 flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                        <span className="text-xs text-neutral-500">Min lines:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-20 text-xs px-2 py-1 rounded border border-neutral-300 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                          value={filters.minLines}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            setFilters({ ...filters, minLines: val > 0 ? val : 0 });
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton
-                    variant="rectangular"
-                    width={16}
-                    height={16}
-                    sx={{ bgcolor: "grey.300", borderRadius: 0.5 }}
-                  />
-                  <Skeleton
-                    variant="text"
-                    width="70%"
-                    sx={{ bgcolor: "grey.300" }}
-                  />
+            )}
+          </div>
+
+          <div className="px-3 py-2 border-b border-neutral-200 flex-shrink-0">
+            <span className="text-xs text-neutral-500 uppercase tracking-wider">
+              Project Files
+            </span>
+          </div>
+
+          {/* File Tree */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="py-2">
+              {!fileNodeData ? (
+                <div className="px-4 space-y-3">
+                  <div className="flex items-center gap-2 py-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                    </span>
+                    <span className="text-xs font-medium text-indigo-600 animate-pulse">
+                      Analyzing project structure...
+                    </span>
+                  </div>
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Skeleton
+                        variant="rectangular"
+                        width={16}
+                        height={16}
+                        sx={{ bgcolor: "grey.300", borderRadius: 0.5 }}
+                      />
+                      <Skeleton
+                        variant="text"
+                        width="70%"
+                        sx={{ bgcolor: "grey.300" }}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : filteredFileTree.length === 0 ? (
+                <div className="px-4 py-8 text-center text-neutral-400 text-sm">
+                  No files found
+                </div>
+              ) : (
+                filteredFileTree?.map((node) => renderFileNode(node))
+              )}
             </div>
-          ) : filteredFileTree.length === 0 ? (
-            <div className="px-4 py-8 text-center text-neutral-400 text-sm">
-              No files found
-            </div>
-          ) : (
-            filteredFileTree?.map((node) => renderFileNode(node))
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
