@@ -3,6 +3,7 @@ export const BASE_URL = "http://122.163.121.176:3019/";
 
 export const API_ENDPOINTS = {
   GET: {
+    GET_CAPTCHA: `${BASE_URL}api/auth/get-captcha`,
     SESSION_DATATABLE: `${BASE_URL}api/projects`,
     RESULTS: `${BASE_URL}api/results/`,
     DOWNLOAD_PROJECT: `${BASE_URL}api/download_updated_code`,

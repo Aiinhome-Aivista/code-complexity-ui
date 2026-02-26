@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GitHub, Google, ArrowForward } from "@mui/icons-material";
+import { GitHub, Google, ArrowForward, Refresh } from "@mui/icons-material";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -14,7 +14,28 @@ import { useUIStore } from "@/store/uiStore";
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaQuestion, setCaptchaQuestion] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const { showSnackbar } = useUIStore();
+
+  const fetchCaptcha = async () => {
+    try {
+      const response = await authService.getCaptcha();
+      if (response && response.isSuccess) {
+        setCaptchaQuestion(response.data.question);
+        setCaptchaToken(response.data.captcha_token);
+      } else {
+        showSnackbar("Failed to load captcha", "error");
+      }
+    } catch (error) {
+      console.error("Captcha error:", error);
+      showSnackbar("Failed to load captcha", "error");
+    }
+  };
+
+  useEffect(() => {
+    fetchCaptcha();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +44,15 @@ export default function LoginPage() {
     const formData = new FormData(e.target as HTMLFormElement);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    const captcha = formData.get("captcha") as string;
 
     try {
-      const response = await authService.login({ email, password });
+      const response = await authService.login({
+        email,
+        password,
+        captcha,
+        captcha_token: captchaToken
+      });
 
       if (response && response.isSuccess) {
         localStorage.setItem("userdata", JSON.stringify(response.data));
@@ -85,6 +112,39 @@ export default function LoginPage() {
               required
               className="bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-indigo-500"
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="captcha" className="text-gray-800">
+                Captcha
+              </Label>
+              <Button
+                type="button"
+                onClick={fetchCaptcha}
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:text-indigo-300 dark:hover:bg-indigo-900/30"
+                title="Refresh Captcha"
+              >
+                <Refresh sx={{ fontSize: 18 }} className="mr-1" />
+                <span className="text-xs font-medium text-black">Refresh</span>
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex items-center justify-center bg-gray-300 dark:bg-neutral-950 text-gray-800 border border-gray-400 rounded-md px-4 h-9 min-w-[120px] font-mono text-lg tracking-wider">
+                {captchaQuestion || "---"}
+              </div>
+              <Input
+                id="captcha"
+                name="captcha"
+                type="number"
+                min="0"
+                placeholder="Enter answer"
+                required
+                className="flex-1 h-9 bg-gray-300 dark:bg-neutral-950 text-gray-800 border-gray-400 focus:border-indigo-500"
+              />
+            </div>
           </div>
 
           <Button

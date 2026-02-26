@@ -51,7 +51,7 @@ function Header() {
   }, [pathname, setActiveProjectName, setProjectResults, setHeatmapData, setFileNodeData, setFlowData]);
 
   return (
-    <div className={`h-full border-b flex justify-center shadow-md transition-colors duration-300 z-[5000] px-8 ${isHomePage ? "bg-gray-200/60 backdrop-blur-xl border-white/20" : "bg-gray-200 backdrop-blur-sm border-neutral-200"}`}>
+    <div className={`h-full border-b flex justify-center shadow-md transition-colors duration-300 z-[5000] px-8 ${isHomePage ? "bg-gray-200/60 backdrop-blur-lg border-white/20" : "bg-gray-200 backdrop-blur-sm border-neutral-200"}`}>
       <div className="container flex justify-between items-center h-full w-full">
         <div className="flex text-neutral-900 gap-8 items-center">
           <div className="flex gap-2 items-center">
